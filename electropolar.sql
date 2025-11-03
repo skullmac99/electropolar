@@ -1,0 +1,142 @@
+CREATE DATABASE ELECTROPOLAR_BD;
+USE ELECTROPOLAR_BD;
+
+
+CREATE TABLE ROLES (
+    ROL ENUM('ADMINISTRADOR', 'VENDEDOR') PRIMARY KEY,
+    CONTRASENA_HASH VARCHAR(255) NOT NULL
+);
+
+INSERT INTO ROLES (ROL, CONTRASENA_HASH)
+VALUES
+('ADMINISTRADOR', SHA2('qwerty123', 256)),
+('VENDEDOR', SHA2('78520', 256));
+
+CREATE TABLE USUARIOS (
+    ID_USUARIO INT AUTO_INCREMENT PRIMARY KEY,
+    NOMBRE VARCHAR(30),
+    APELLIDOPAT VARCHAR(30),
+    APELLIDOMAT VARCHAR(30),
+    ROL ENUM('ADMINISTRADOR', 'VENDEDOR'),
+    FOREIGN KEY (ROL) REFERENCES ROLES(ROL)
+);
+
+INSERT INTO USUARIOS (NOMBRE, APELLIDOPAT, APELLIDOMAT, ROL)
+VALUES
+('Martha', 'González', 'Luna', 'VENDEDOR'),
+('Roberto', 'Hernández', 'Reyes', 'ADMINISTRADOR');
+
+CREATE TABLE CLIENTES (
+    ID_CLIENTE INT AUTO_INCREMENT PRIMARY KEY,
+    NOMBRE VARCHAR(100),
+    RFC VARCHAR(13) UNIQUE,
+    CORREO VARCHAR(255),
+    TELEFONO VARCHAR(15),
+    DIRECCION TEXT
+);
+
+INSERT INTO CLIENTES (NOMBRE, RFC, CORREO, TELEFONO, DIRECCION)
+VALUES ('Público en general', 'XAXX010101000', '', '', '');
+
+ALTER TABLE CLIENTES DROP COLUMN DIRECCION;
+
+ALTER TABLE CLIENTES
+ADD CALLE VARCHAR(100) NOT NULL DEFAULT '',
+ADD COLONIA VARCHAR(100) NOT NULL DEFAULT '',
+ADD NUMERO_EXTE INT,
+ADD NUMERO_INTE INT,
+ADD CODIGO_POST INT NOT NULL DEFAULT 0,
+ADD MUNICIPIO VARCHAR(100) NOT NULL DEFAULT '',
+ADD ESTADO VARCHAR(50) NOT NULL DEFAULT '',
+ADD PAIS VARCHAR(50) NOT NULL DEFAULT '',
+ADD CFDI VARCHAR(100) NOT NULL DEFAULT '';
+
+ALTER TABLE CLIENTES
+MODIFY NOMBRE VARCHAR(100) NOT NULL,
+MODIFY RFC VARCHAR(13) NOT NULL,
+MODIFY CORREO VARCHAR(255) NOT NULL;
+
+
+ALTER TABLE CLIENTES
+MODIFY NOMBRE VARCHAR(100) NOT NULL DEFAULT 'Público en general',
+MODIFY RFC VARCHAR(13) NOT NULL DEFAULT 'XAXX010101000',
+MODIFY CORREO VARCHAR(255) NOT NULL DEFAULT 'correo@generico.com';
+
+CREATE TABLE PROVEEDORES (
+    ID_PROVEEDOR INT AUTO_INCREMENT PRIMARY KEY,
+    NOMBRE VARCHAR(100) NOT NULL,
+    RFC VARCHAR(13) UNIQUE NOT NULL,
+    CORREO VARCHAR(255),
+    TELEFONO VARCHAR(15),
+    ESTADO VARCHAR(50),
+    CIUDAD VARCHAR(50),
+    CALLE VARCHAR(100),
+    COLONIA VARCHAR(100),
+    NUMERO_EXTE INT,
+    NUMERO_INT INT,
+    CODIGO_POST INT,
+    MUNICIPIO VARCHAR(100),
+    PAIS VARCHAR(50),
+    ESTATUS ENUM('ACTIVO', 'INACTIVO') DEFAULT 'ACTIVO'
+);
+
+
+CREATE TABLE PRODUCTOS(
+	ID_PRODUCTOS VARCHAR(8) PRIMARY KEY,
+	NOMBRE VARCHAR(100),
+	DESCRIPCION TEXT,
+	PRECIO FLOAT(10,2),
+	STOCK INT,
+	ID_PROVEEDOR INT,
+	FOREIGN KEY(ID_PROVEEDOR) REFERENCES PROVEEDORES(ID_PROVEEDOR)
+);
+
+ALTER TABLE PRODUCTOS ADD UNIDAD VARCHAR(3) AFTER DESCRIPCION;
+
+CREATE TABLE VENTAS(
+	ID_VENTAS INT AUTO_INCREMENT,
+	FECHA_VENTA DATETIME DEFAULT CURRENT_TIMESTAMP,
+	TOTAL FLOAT(10,2),
+	ID_USUARIO INT, 
+	PRIMARY KEY(ID_VENTAS),
+	FOREIGN KEY(ID_USUARIO) REFERENCES USUARIOS(ID_USUARIO)
+);
+
+CREATE TABLE DETALLE_VENTAS(
+	ID_DETALLE INT AUTO_INCREMENT,
+	ID_VENTAS INT NOT NULL,
+	ID_PRODUCTOS VARCHAR(8) NOT NULL,
+	CANTIDAD FLOAT NOT NULL,
+	PRECIO_UNITARIO FLOAT(10,2)NOT NULL,
+	SUBTOTAL FLOAT(10,2)NOT NULL,
+	PRIMARY KEY(ID_DETALLE),
+	FOREIGN KEY(ID_VENTAS) REFERENCES VENTAS(ID_VENTAS),
+	FOREIGN KEY(ID_PRODUCTOS) REFERENCES PRODUCTOS(ID_PRODUCTOS)
+);
+
+
+
+----------INSERTS
+
+INSERT INTO PROVEEDORES 
+(NOMBRE, RFC, CORREO, TELEFONO, ESTADO, CIUDAD, CALLE, COLONIA, NUMERO_EXTE, NUMERO_INT, CODIGO_POST, MUNICIPIO, PAIS, ESTATUS)
+VALUES
+('ElectroMex S.A. de C.V.', 'ELMX850101AA1', 'ventas@electromex.com.mx', '5551234567', 'Ciudad de México', 'CDMX', 'Av. Insurgentes Sur 350', 'Del Valle', 350, NULL, 03100, 'Benito Juárez', 'México', 'ACTIVO'),
+('CompuComponentes del Norte', 'CCDN920505BB2', 'contacto@compucomponentes.mx', '8187654321', 'Nuevo León', 'Monterrey', 'Av. Universidad 1020', 'Obrera', 1020, 3, 64000, 'Monterrey', 'México', 'ACTIVO'),
+('Distribuidora Electrónica del Bajío', 'DEBA880312CC3', 'info@delectrobajio.mx', '4778906543', 'Guanajuato', 'León', 'Blvd. López Mateos 550', 'Centro', 550, NULL, 37000, 'León', 'México', 'ACTIVO'),
+('Capacitores y Resistencias del Sur', 'CARS900614DD4', 'ventas@capacitoresdelsur.mx', '9997654321', 'Yucatán', 'Mérida', 'Calle 65 245', 'Santa Rosa', 245, 2, 97100, 'Mérida', 'México', 'INACTIVO'),
+('LogicPro Distribuidores', 'LOPR950821EE5', 'contacto@logicpro.mx', '5543216789', 'Jalisco', 'Guadalajara', 'Calle Circuito 45', 'Tecnológico', 45, NULL, 44100, 'Guadalajara', 'México', 'ACTIVO');
+
+
+INSERT INTO PRODUCTOS (ID_PRODUCTOS, NOMBRE, DESCRIPCION, UNIDAD, PRECIO, STOCK, ID_PROVEEDOR)
+VALUES
+('PR001', 'Resistencia 220Ω 1/4W', 'Resistencia de carbón, tolerancia 5%, ideal para proyectos básicos de electrónica.', 'pz', 0.50, 1500, 4),
+('PR002', 'Capacitor Electrolítico 100µF 25V', 'Capacitor electrolítico radial, usado para filtrado en fuentes de alimentación.', 'pz', 1.20, 800, 4),
+('PR003', 'Protoboard 830 puntos', 'Protoboard tamaño completo, compatible con Arduino y otros microcontroladores.', 'pz', 60.00, 100, 1),
+('PR004', 'Compuerta Lógica AND 74LS08', 'Circuito integrado TTL con 4 compuertas AND de 2 entradas.', 'pz', 12.50, 200, 2),
+('PR005', 'Arduino UNO R3', 'Microcontrolador ATmega328P original, compatible con IDE Arduino.', 'pz', 280.00, 50, 3),
+('PR006', 'Sensor Ultrasonico HC-SR04', 'Sensor de distancia por ultrasonido con precisión de 3mm.', 'pz', 85.00, 120, 3),
+('PR007', 'Transistor NPN 2N2222', 'Transistor de propósito general, corriente máxima 800mA.', 'pz', 3.00, 500, 2),
+('PR008', 'Cable Jumper Macho-Macho (40 pzas)', 'Paquete de cables de conexión para protoboard, 20 cm.', 'cj', 35.00, 200, 1),
+('PR009', 'Diodo LED Rojo 5mm', 'Diodo emisor de luz rojo brillante, 20 mA.', 'pz', 0.80, 1000, 4),
+('PR010', 'Fuente de alimentación 12V 2A', 'Adaptador de corriente estable para proyectos de electrónica.', 'pz', 120.00, 75, 5);
