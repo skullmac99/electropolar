@@ -53,12 +53,20 @@ public class LogicaAdmin {
             String precioStr = txtPrecio.getText().trim();
             String stockStr = txtStock.getText().trim();
 
-            // 🔸 Validar campos vacíos
+            // Validar campos vacíos
             if (id.isEmpty() || nombre.isEmpty() || descripcion.isEmpty() ||
                     unidad.isEmpty() || precioStr.isEmpty() || stockStr.isEmpty()) {
                 JOptionPane.showMessageDialog(null,
                         "Por favor completa todos los campos.",
                         "Advertencia", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            // Validar longitud del ID (máx 8 caracteres)
+            if (id.length() > 8) {
+                JOptionPane.showMessageDialog(null,
+                        "El ID del producto no puede tener más de 8 caracteres.",
+                        "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 

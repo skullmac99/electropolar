@@ -4,7 +4,6 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 
-
 import com.electropolar.LogicaAdmin;
 import com.electropolar.Proveedor;
 
@@ -180,6 +179,29 @@ public class AltaProducto extends JPanel {
                 // Solo permitir dígitos
                 if (!Character.isDigit(c)) {
                     e.consume();
+                }
+            }
+        });
+
+        // --- Validación en tiempo real para el campo ID del producto ---
+        txtIdProducto.addKeyListener(new java.awt.event.KeyAdapter() {
+            @Override
+            public void keyTyped(java.awt.event.KeyEvent e) {
+                char c = e.getKeyChar();
+
+                // Evita espacios
+                if (Character.isWhitespace(c)) {
+                    e.consume();
+                    return;
+                }
+
+                // Evita que se escriban más de 8 caracteres
+                if (txtIdProducto.getText().length() >= 8) {
+                    e.consume();
+                    Toolkit.getDefaultToolkit().beep();
+                    JOptionPane.showMessageDialog(null,
+                            "El ID del producto no puede tener más de 8 caracteres.",
+                            "Advertencia", JOptionPane.WARNING_MESSAGE);
                 }
             }
         });
