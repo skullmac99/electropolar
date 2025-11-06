@@ -100,7 +100,7 @@ public class AltaProducto extends JPanel {
         // Precio
         gbc.gridx = 0;
         gbc.gridy = 3;
-        panelCentral.add(new JLabel("Precio"), gbc);
+        panelCentral.add(new JLabel("Precio compra"), gbc);
         gbc.gridx = 1;
         panelCentral.add(txtPrecio, gbc);
 

@@ -4,6 +4,8 @@ import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
+//librreria nueva
+import java.text.DecimalFormat;
 
 import Datos.ValidacionesBD;
 
@@ -37,6 +39,7 @@ public class LogicaAdmin {
         }
     }
 
+////////////METODO MODIFICADO 
     public void procesarGuardarProducto(JTextField txtId,
             JTextField txtNombre,
             JTextField txtDescripcion,
@@ -86,8 +89,8 @@ public class LogicaAdmin {
                 return;
             }
 
-            double precio = Double.parseDouble(precioStr);
-            int stock = Integer.parseInt(stockStr);
+            double costoDeCompra = Double.parseDouble(precioStr);
+            int stockDeCompra = Integer.parseInt(stockStr);
 
             // Validar proveedor seleccionado
             Proveedor proveedorSeleccionado = (Proveedor) comboproveedor.getSelectedItem();
@@ -98,27 +101,77 @@ public class LogicaAdmin {
                 return;
             }
 
+
             int idproveedor = proveedorSeleccionado.getIdProveedor();
 
-            // Crear producto y guardar
-            Producto nuevo = new Producto(id, nombre, descripcion, unidad, precio, stock, idproveedor);
+            Producto productoExistente=buscarProductoPorId(id);
 
-            if (guardarProducto(nuevo)) {
-                JOptionPane.showMessageDialog(null,
-                        "Producto registrado con éxito.",
-                        "Éxito", JOptionPane.INFORMATION_MESSAGE);
-                limpiarCampos(txtId, txtNombre, txtDescripcion, txtUnidad, txtPrecio, txtStock);
-            }
+            if(productoExistente==null){
+                //producto nuevo
+                double CostoPromedioInicial=costoDeCompra;
+                Producto nuevo=new Producto(id,nombre,descripcion,unidad,CostoPromedioInicial,stockDeCompra,idproveedor);
 
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(null,
-                    "El campo 'Precio' debe ser numérico y 'Stock' debe ser un número entero.",
-                    "Error", JOptionPane.ERROR_MESSAGE);
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(null,
-                    "Error inesperado: " + e.getMessage(),
-                    "Error", JOptionPane.ERROR_MESSAGE);
+                if (guardarProducto(nuevo)) {
+                    JOptionPane.showMessageDialog(null, "producto nuevo registrado",
+                    "exito",JOptionPane.INFORMATION_MESSAGE);
+                    limpiarCampos(txtId,txtNombre,txtDescripcion,txtUnidad,txtPrecio,txtStock);
+                    
+                }
+
+
+            }else{
+                //producto existente calcular promedio
+
+                double CostoPromedioActual=productoExistente.getPrecio();
+                int stockActual=productoExistente.getStock();
+
+                double valorInventarioActual=stockActual*CostoPromedioActual;
+                double valorNuevaCompra=stockDeCompra*costoDeCompra;
+
+                int stockTotal=stockActual + stockDeCompra;
+                double valorTotal=valorInventarioActual+valorNuevaCompra;
+
+                //calcular nuevo costo promedio
+                double nuevoCostoPromedio=0.0;
+                if (stockTotal>0) {
+                    nuevoCostoPromedio=valorTotal/stockTotal;
+                    
+                }
+                productoExistente.setNombre(nombre);
+                productoExistente.setDescripcion(descripcion);
+                productoExistente.setUnidad(unidad);
+                productoExistente.setIdproveedor(idproveedor);
+
+                productoExistente.setStock(stockTotal);
+                productoExistente.setPrecio(nuevoCostoPromedio);
+
+                if (bd.actualizarProducto(productoExistente)) {
+                    DecimalFormat df=new DecimalFormat("#.00");
+                    JOptionPane.showMessageDialog(null,
+                    "stock de producto actualizdo con exito \n"+
+                    "nuevo costo promedio"+df.format(nuevoCostoPromedio),
+                    "exito",JOptionPane.INFORMATION_MESSAGE);
+
+                    limpiarCampos(txtId,txtNombre,txtDescripcion,txtUnidad,txtPrecio,txtStock);
+                }else{
+                    JOptionPane.showMessageDialog(null, 
+                    "error al actualizar producto",
+                    "error",JOptionPane.ERROR_MESSAGE);
+
+                }
         }
+    }catch(NumberFormatException ex){
+        JOptionPane.showMessageDialog(null,
+        "el campo 'precio' debe de ser numerico  y 'stock' debe de ser un numero entero",
+        "error",JOptionPane.ERROR_MESSAGE);
+
+    }catch(Exception e ){
+        JOptionPane.showMessageDialog(null,
+        "error inesperado: "+e.getMessage(),
+        "error",JOptionPane.ERROR_MESSAGE);
+        e.printStackTrace();
+
+    }
     }
 
     public void procesarGuardarCliente(
