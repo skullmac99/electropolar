@@ -100,30 +100,30 @@ public class ValidacionesBD {
     /** Búsqueda dinámica para el panel BuscarProducto. */
     public List<Object[]> buscarProductos(String texto) {
         List<Object[]> productos = new ArrayList<>();
-        String sql = "SELECT ID_PRODUCTOS, NOMBRE, DESCRIPCION, UNIDAD, PRECIO, STOCK FROM PRODUCTOS "
-                + "WHERE NOMBRE LIKE ? OR DESCRIPCION LIKE ?";
+        // [CORRECCIÓN]: Seleccionamos PRECIO_VENTA
+        String sql = "SELECT ID_PRODUCTOS, NOMBRE, DESCRIPCION, UNIDAD, PRECIO_VENTA, STOCK FROM PRODUCTOS "
+                   + "WHERE (NOMBRE LIKE ? OR DESCRIPCION LIKE ?)";
+        
         try (Connection conn = ConexionBD.conectar();
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
             String filtro = "%" + texto + "%";
             stmt.setString(1, filtro);
             stmt.setString(2, filtro);
+            
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    String id = rs.getString("ID_PRODUCTOS");
-                    String nombre = rs.getString("NOMBRE");
-                    String desc = rs.getString("DESCRIPCION");
-                    String unidad = rs.getString("UNIDAD");
-                    int stock = rs.getInt("STOCK");
-                    double precio = rs.getDouble("PRECIO");
-                    double precioMayo = Math.round(precio * 0.8 * 100.0) / 100.0;
+                    double precioVenta = rs.getDouble("PRECIO_VENTA"); 
+                    double precioMayo = Math.round(precioVenta * 0.8 * 100.0) / 100.0; 
+
                     productos.add(new Object[] {
-                            id,
-                            nombre,
-                            desc,
-                            unidad,
-                            stock,
-                            String.format("$%.2f", precio),
-                            String.format("$%.2f (desde 10 unidades)", precioMayo)
+                        rs.getString("ID_PRODUCTOS"),
+                        rs.getString("NOMBRE"),
+                        rs.getString("DESCRIPCION"),
+                        rs.getString("UNIDAD"),
+                        rs.getInt("STOCK"),
+                        String.format("$%.2f", precioVenta), // Mostramos precio de venta
+                        String.format("$%.2f (desde 10 unidades)", precioMayo)
                     });
                 }
             }
@@ -146,8 +146,9 @@ public class ValidacionesBD {
                             rs.getString("NOMBRE"),
                             rs.getString("DESCRIPCION"),
                             rs.getString("UNIDAD"),
-                            rs.getDouble("PRECIO"),
-                            rs.getInt("STOCK"));
+                            rs.getDouble("PRECIO_COMPRA"),
+                            rs.getInt("STOCK"),
+                            rs.getInt("ID_PROVEEDOR"));
                 }
             }
         } catch (Exception e) {
@@ -161,7 +162,8 @@ public class ValidacionesBD {
      */
     public List<Producto> obtenerTodosProductos() {
         List<Producto> lista = new ArrayList<>();
-        String sql = "SELECT ID_PRODUCTOS, NOMBRE, DESCRIPCION, UNIDAD, PRECIO, STOCK, ID_PROVEEDOR FROM PRODUCTOS";
+        //CONSULTA MODIFICADA
+        String sql = "SELECT ID_PRODUCTOS, NOMBRE, DESCRIPCION, UNIDAD,PRECIO_COMPRA, PRECIO_VENTA,UTILIDADES, STOCK, ID_PROVEEDOR FROM PRODUCTOS";
 
         try (Connection conn = ConexionBD.conectar();
                 PreparedStatement stmt = conn.prepareStatement(sql);
@@ -173,7 +175,9 @@ public class ValidacionesBD {
                         rs.getString("NOMBRE"),
                         rs.getString("DESCRIPCION"),
                         rs.getString("UNIDAD"),
-                        rs.getDouble("PRECIO"),
+                        rs.getDouble("PRECIO_COMPRA"),
+                        rs.getDouble("PRECIO_VENTA"),
+                        rs.getDouble("UTILIDADES"),
                         rs.getInt("STOCK"),
                         rs.getInt("ID_PROVEEDOR"));
                 lista.add(p);
@@ -226,13 +230,42 @@ public class ValidacionesBD {
     }
 
     /** Inserta un producto si no existe aún */
+    public boolean actualizarProducto(Producto producto) {
+        String sql = "UPDATE PRODUCTOS SET " +
+                     "NOMBRE = ?, " +
+                     "DESCRIPCION = ?, " +
+                     "UNIDAD = ?, " +
+                     "PRECIO_COMPRA = ?, " + // <-- Actualiza el Costo Promedio
+                     "STOCK = ?, " +
+                     "ID_PROVEEDOR = ? " +
+                     "WHERE ID_PRODUCTOS = ?";
+
+        try (Connection con = ConexionBD.conectar();
+             PreparedStatement pstmt = con.prepareStatement(sql)) {
+
+            pstmt.setString(1, producto.getNombre());
+            pstmt.setString(2, producto.getDescripcion());
+            pstmt.setString(3, producto.getUnidad());
+            pstmt.setDouble(4, producto.getCostoPromedio()); // Usa el costo promedio
+            pstmt.setInt(5, producto.getStock());
+            pstmt.setInt(6, producto.getIdproveedor());
+            pstmt.setString(7, producto.getId());
+
+            int filasAfectadas = pstmt.executeUpdate();
+            return filasAfectadas > 0; // Devuelve true si se actualizó
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
     public boolean insertarProducto(Producto producto) {
         if (existeProducto(producto.getId())) {
             return false; // ya existe, no insertamos
         }
 
         String sql = "INSERT INTO PRODUCTOS "
-                + "(ID_PRODUCTOS, NOMBRE, DESCRIPCION, UNIDAD, PRECIO, STOCK, ID_PROVEEDOR) "
+                + "(ID_PRODUCTOS, NOMBRE, DESCRIPCION, UNIDAD, PRECIO_COMPRA, STOCK, ID_PROVEEDOR) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = ConexionBD.conectar();
@@ -242,7 +275,7 @@ public class ValidacionesBD {
             stmt.setString(2, producto.getNombre());
             stmt.setString(3, producto.getDescripcion());
             stmt.setString(4, producto.getUnidad());
-            stmt.setDouble(5, producto.getPrecio());
+            stmt.setDouble(5, producto.getCostoPromedio());
             stmt.setInt(6, producto.getStock());
             stmt.setInt(7, producto.getIdproveedor());
 
