@@ -81,10 +81,10 @@ public class AltaUsuario extends JPanel {
 
         btnGuardar = new JButton("Guardar");
         btnGuardar.setBackground(Color.decode("#A4C5E1"));
-        /*btnGuardar.addActionListener(e -> logic.procesarGuardarUsuario(
+        btnGuardar.addActionListener(e -> logic.procesarGuardarUsuario(
             txtNombre, txtApellidoP,
-            txtApellidoM ,  txtRol
-        ));*/
+            txtApellidoM , comboRol
+        ));
 
         btnCancelar = new JButton("Cancelar");
         btnCancelar.setBackground(Color.decode("#A4C5E1"));

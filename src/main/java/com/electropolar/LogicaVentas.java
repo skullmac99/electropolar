@@ -1,5 +1,6 @@
 package com.electropolar;
 
+import java.awt.Component;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -157,49 +158,66 @@ public class LogicaVentas {
     }
 
     /** Confirma con el usuario y finaliza la venta. */
-    /*public void confirmarYFinalizarVenta(Cliente cliente, Vendedor vendedor) {
+    public void confirmarYFinalizarVenta(Cliente cliente, Vendedor vendedor) {
         int opt = JOptionPane.showConfirmDialog(parentFrame,
                 "¿Deseas finalizar la venta y generar el ticket?", "Confirmar venta", JOptionPane.YES_NO_OPTION);
         if (opt == JOptionPane.YES_OPTION) {
             finalizarVenta(cliente, vendedor);
         }
-    }*/
+    }
 
     /** Finaliza la venta: guarda en BD, genera ticket PDF y limpia. */
-    /*private void finalizarVenta(Cliente cliente, Vendedor vendedor) {
-        if (detallesEnMemoria.isEmpty()) {
-            JOptionPane.showMessageDialog(parentFrame, "No hay productos para vender.", "Error",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
-        }
+    private void finalizarVenta(Cliente cliente, Vendedor vendedor) {
+    if (detallesEnMemoria.isEmpty()) {
+        JOptionPane.showMessageDialog(parentFrame, "No hay productos para vender.", "Error",
+                JOptionPane.ERROR_MESSAGE);
+        return;
+    }
+    try {
+        double totalVenta = Double.parseDouble(txtTotalPagar.getText());
+        int idUsuario = vendedor.getId();
+        int idCliente = cliente.getIdCliente();
+
+        ValidacionesBD  dao = new ValidacionesBD();
+        int idVentaGen = dao.finalizarVenta(totalVenta, idUsuario, idCliente, detallesEnMemoria);
+        if (idVentaGen <= 0)
+            throw new RuntimeException("Error al insertar venta.");
+
+        Venta venta = new Venta(idVentaGen, idCliente, LocalDateTime.now(), totalVenta, detallesEnMemoria);
+        String ruta = "tickets/Ticket_Venta_" + idVentaGen + ".pdf";
+        TicketPDFGenerator.generarPDF(venta, cliente, vendedor, ruta);
+
+        JOptionPane.showMessageDialog(parentFrame, "Venta exitosa. Ticket: " + ruta, "Éxito",
+                JOptionPane.INFORMATION_MESSAGE);
+
+        // Limpiar tabla y campos
+        ((DefaultTableModel) tablaVenta.getModel()).setRowCount(0);
+        detallesEnMemoria.clear();
+        txtTotalPagar.setText("0.00");
+
+        //Actualizar folio después de cada venta
         try {
-            double totalVenta = Double.parseDouble(txtTotalPagar.getText());
-            int idUsuario = vendedor.getId();
-            int idCliente = cliente.getIdCliente();
-
-            ValidacionesBD dao = new ValidacionesBD();
-            int idVentaGen = dao.finalizarVenta(totalVenta, idUsuario, idCliente, detallesEnMemoria);
-            if (idVentaGen <= 0)
-                throw new RuntimeException("Error al insertar venta.");
-
-            Venta venta = new Venta(idVentaGen, idCliente, LocalDateTime.now(), totalVenta, detallesEnMemoria);
-            String ruta = "tickets/Ticket_Venta_" + idVentaGen + ".pdf";
-            TicketPDFGenerator.generarPDF(venta, cliente, vendedor, ruta);
-
-            JOptionPane.showMessageDialog(parentFrame, "Venta exitosa. Ticket: " + ruta, "Éxito",
-                    JOptionPane.INFORMATION_MESSAGE);
-            // Limpiar tabla y memoria
-            ((DefaultTableModel) tablaVenta.getModel()).setRowCount(0);
-            detallesEnMemoria.clear();
-            txtTotalPagar.setText("0.00");
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("llega");
-            JOptionPane.showMessageDialog(parentFrame, "Error al finalizar la venta: " + e.getMessage(), "Error",
-                    JOptionPane.ERROR_MESSAGE);
+            int siguienteFolio = dao.obtenerNextFolio();
+            // Busca si en la ventana existe un campo txtFolio
+            Component[] componentes = parentFrame.getContentPane().getComponents();
+            for (Component comp : componentes) {
+                if (comp instanceof JTextField && ((JTextField) comp).getName() != null
+                        && ((JTextField) comp).getName().equals("txtFolio")) {
+                    ((JTextField) comp).setText(String.valueOf(siguienteFolio));
+                    break;
+                }
+            }
+        } catch (Exception ex) {
+            System.err.println("No se pudo actualizar el folio: " + ex.getMessage());
         }
 
-    }*/
+    } catch (Exception e) {
+        e.printStackTrace();
+        JOptionPane.showMessageDialog(parentFrame,
+                "Error al finalizar la venta: " + e.getMessage(),
+                "Error", JOptionPane.ERROR_MESSAGE);
+    }
+}
 
     /**
      * Agrega un listener de doble clic en una tabla de productos para seleccionar

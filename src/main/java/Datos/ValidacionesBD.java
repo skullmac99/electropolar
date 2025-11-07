@@ -682,33 +682,36 @@ public class ValidacionesBD {
     }
 
     public boolean actualizarProducto(Producto p) {
-        String sql = """
-                UPDATE PRODUCTOS SET
-                  NOMBRE       = ?,
-                  DESCRIPCION  = ?,
-                  UNIDAD       = ?,
-                  PRECIO       = ?,
-                  STOCK        = ?
-                WHERE ID_PRODUCTOS = ?
-                """;
+    String sql = """
+            UPDATE PRODUCTOS SET
+              NOMBRE       = ?,
+              DESCRIPCION  = ?,
+              UNIDAD       = ?,
+              PRECIO       = ?,
+              STOCK        = ?,
+              ID_PROVEEDOR = ?
+            WHERE ID_PRODUCTOS = ?
+            """;
 
-        try (Connection conn = ConexionBD.conectar();
-                PreparedStatement ps = conn.prepareStatement(sql)) {
+    try (Connection conn = ConexionBD.conectar();
+         PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setString(1, p.getNombre());
-            ps.setString(2, p.getDescripcion());
-            ps.setString(3, p.getUnidad());
-            ps.setDouble(4, p.getPrecio());
-            ps.setInt(5, p.getStock());
-            ps.setString(6, p.getId()); // ← condición del WHERE
+        ps.setString(1, p.getNombre());
+        ps.setString(2, p.getDescripcion());
+        ps.setString(3, p.getUnidad());
+        ps.setDouble(4, p.getPrecio());
+        ps.setInt(5, p.getStock());
+        ps.setInt(6, p.getIdproveedor());
+        ps.setString(7, p.getId());
 
-            return ps.executeUpdate() > 0;
+        return ps.executeUpdate() > 0;
 
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
-        }
+    } catch (SQLException e) {
+        e.printStackTrace();
+        return false;
     }
+}
+
 
     public boolean actualizarCliente(Cliente c) {
         String sql = """

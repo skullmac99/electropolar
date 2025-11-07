@@ -47,7 +47,7 @@ public class AltaCliente extends JPanel {
         Color fondoCampo = Color.decode("#A4C5E1");
 
         // Inicialización
-    
+
         txtNombre = new JTextField(20);
         txtCorreo = new JTextField(20);
         txtRFC = new JTextField(15);
@@ -63,7 +63,7 @@ public class AltaCliente extends JPanel {
         txtCFDI = new JTextField(15);
 
         JTextField[] campos = { txtNombre, txtCorreo, txtRFC, txtTelefono, txtCalle,
-                txtColonia, txtNoExt, txtNoInt, txtCP,  txtMunicipio, txtEstado, txtPais, txtCFDI };
+                txtColonia, txtNoExt, txtNoInt, txtCP, txtMunicipio, txtEstado, txtPais, txtCFDI };
 
         for (JTextField campo : campos) {
             campo.setFont(fuente);
@@ -90,7 +90,7 @@ public class AltaCliente extends JPanel {
 
         // ----------------- Panel botones -----------------
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        panelBotones.setBackground(Color.decode("#FFFFFF"));
+        panelBotones.setBackground(Color.decode("#7CBBBB"));
 
         btnGuardar = new JButton("Guardar");
         btnGuardar.setBackground(Color.decode("#A4C5E1"));
@@ -114,6 +114,26 @@ public class AltaCliente extends JPanel {
         panelBotones.add(btnCancelar);
 
         add(panelBotones, BorderLayout.SOUTH);
+
+        JTextField[] camposrestringidos = { txtNoExt, txtNoInt, txtCP };
+
+        // Creamos el KeyListener una sola vez para reutilizarlo
+        java.awt.event.KeyAdapter soloNumerosAdapter = new java.awt.event.KeyAdapter() {
+            @Override
+            public void keyTyped(java.awt.event.KeyEvent e) {
+                char c = e.getKeyChar();
+                // Solo permitir dígitos (0-9) y teclas de control (como backspace)
+                if (!Character.isDigit(c) && !Character.isISOControl(c)) {
+                    e.consume();
+                }
+            }
+        };
+
+        // Asignamos el mismo listener a todos los campos del arreglo
+        for (JTextField campo : camposrestringidos) {
+            campo.addKeyListener(soloNumerosAdapter);
+        }
+
     }
 
     private void addCampo(JPanel panel, GridBagConstraints gbc, int fila,

@@ -43,7 +43,6 @@ public class CancelarTicket extends JPanel {
         ImageIcon ico = new ImageIcon("logo.png");
         Image img = ico.getImage().getScaledInstance(80, 80, Image.SCALE_SMOOTH);
         panelSuperior.add(new JLabel(new ImageIcon(img)), BorderLayout.EAST);
-
         add(panelSuperior, BorderLayout.NORTH);
 
         // ─── TABLA DE DETALLES ────────────────────────────────────
@@ -83,11 +82,11 @@ public class CancelarTicket extends JPanel {
         add(panelBotones, BorderLayout.SOUTH);
 
         // ─── LISTENERS ────────────────────────────────────────────
-        //btnCargar.addActionListener(e -> cargarDetalles());
+        btnCargar.addActionListener(e -> cargarDetalles());
         btnAccion.addActionListener(e -> ejecutarCancelacion());
     }
 
-    /*private void cargarDetalles() {
+    private void cargarDetalles() {
         modelo.setRowCount(0);
         String folio = txtFolio.getText().trim();
         int idVenta;
@@ -114,7 +113,7 @@ public class CancelarTicket extends JPanel {
                     String.format("%.2f", d.getSubtotal())
             });
         }
-    }*/
+    }
 
     private void ejecutarCancelacion() {
         String folio = txtFolio.getText().trim();
@@ -136,7 +135,7 @@ public class CancelarTicket extends JPanel {
                 opciones[0]);
         ValidacionesBD val = new ValidacionesBD();
 
-        /*switch (sel) {
+        switch (sel) {
             case 0: // venta completa
                 if (val.cancelarVentaCompleta(idVenta)) {
                     JOptionPane.showMessageDialog(this, "Venta completamentecancelada.");
@@ -182,7 +181,7 @@ public class CancelarTicket extends JPanel {
 
             default:
                 // nada
-        }*/
+        }
     }
 
     // Getters por si los necesitas

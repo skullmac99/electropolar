@@ -15,7 +15,7 @@ import com.electropolar.Vendedor;
 
 import Datos.ConexionBD;
 import Datos.ValidacionesBD;
-//import Datos.VentaDAO;
+import Datos.VentaDAO;
 
 public class puntoVenta extends JFrame {
 
@@ -71,7 +71,7 @@ public class puntoVenta extends JFrame {
         txtFolio = new JTextField(8); // usa la variable de instancia
         txtFolio.setBackground(Color.decode("#A4C5E1"));
         txtFolio.setEditable(false);
-        /*try {
+        try {
             // Conecta y usa VentaDAO para obtener nextFolio
             Connection conn = ConexionBD.conectar();
             VentaDAO ventaDao = new VentaDAO(conn);
@@ -81,10 +81,10 @@ public class puntoVenta extends JFrame {
         } catch (SQLException ex) {
             ex.printStackTrace();
             txtFolio.setText("1");
-        }*/
+        }
         panelSuperior.add(txtFolio);
 
-        // Botones de repetición y cancelación
+        /*// Botones de repetición y cancelación
         JButton btnRepetirTicket = new JButton("Repetir ticket");
         btnRepetirTicket.setBackground(Color.decode("#A4C5E1"));
         btnRepetirTicket.addActionListener(e -> {
@@ -94,7 +94,7 @@ public class puntoVenta extends JFrame {
             dlg.setLocationRelativeTo(this);
             dlg.setVisible(true);
         });
-        panelSuperior.add(btnRepetirTicket);
+        panelSuperior.add(btnRepetirTicket);*/
 
         JButton btnCancelarticket = new JButton("Cancelar ticket");
         btnCancelarticket.setBackground(Color.decode("#A4C5E1")); 
@@ -117,9 +117,8 @@ public class puntoVenta extends JFrame {
         panelSuperior.add(comboCliente);
 
         // Logo
-        panelSuperior.add(Box.createHorizontalStrut(100));
+        panelSuperior.add(Box.createHorizontalStrut(80));
         panelSuperior.add(new JLabel(new ImageIcon("logo.png")));
-
         add(panelSuperior, BorderLayout.NORTH);
 
         // ------------------------- PANEL CENTRAL -------------------------
@@ -180,16 +179,16 @@ public class puntoVenta extends JFrame {
                 this, txtClave, txtNombre, txtDescripcion, txtExistencia, txtUnidad,
                 txtCantidad, txtDcto, txtPrecioUnit, txtTotalPagar, tablaVenta);
 
-        /*getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+        getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
                 .put(KeyStroke.getKeyStroke("INSERT"), "finalizarVenta");
         getRootPane().getActionMap().put("finalizarVenta", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 Cliente CLI = (Cliente) comboCliente.getSelectedItem();
                 Vendedor vd = (Vendedor) comboVendedor.getSelectedItem();
-                //logicaVentas.confirmarYFinalizarVenta(CLI, vd);
+                logicaVentas.confirmarYFinalizarVenta(CLI, vd);
             }
-        });*/
+        });
 
         getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
                 .put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "cancelarVenta");

@@ -1,4 +1,5 @@
 package presentacion;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
@@ -7,11 +8,15 @@ import javax.swing.table.*;
 import com.electropolar.Funciones;
 import com.electropolar.LogicaAdmin;
 import com.electropolar.Producto;
+import com.electropolar.Proveedor;
+
 import Datos.ValidacionesBD;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+
+import java.util.List;
 
 public class ventaAdmin extends JFrame {
 
@@ -90,7 +95,7 @@ public class ventaAdmin extends JFrame {
         // Acción para abrir el panel AltaUsuario
         btnAdminUsuario.addActionListener(e -> {
             JDialog dialog = new JDialog(this, "Administrar Usuario", true);
-            //dialog.setContentPane(new AdministarUsuario());
+            dialog.setContentPane(new AdministarUsuario());
             dialog.setSize(600, 500);
             dialog.setLocationRelativeTo(null);
             dialog.setVisible(true);
@@ -108,7 +113,7 @@ public class ventaAdmin extends JFrame {
         // Acción para abrir el panel AdministarCliente
         btnAdminCliente.addActionListener(e -> {
             JDialog dialog = new JDialog(this, "Administrar Cliente", true);
-            //dialog.setContentPane(new AdministrarCliente());
+            dialog.setContentPane(new AdministrarCliente());
             dialog.setSize(1200, 500);
             dialog.setLocationRelativeTo(null);
             dialog.setVisible(true);
@@ -127,7 +132,7 @@ public class ventaAdmin extends JFrame {
         // Acción para abrir el panel ReporteVentasPanel
         btnReportes.addActionListener(e -> {
             JDialog dialog = new JDialog(this, "Reporte de Ventas", true);
-            //dialog.setContentPane(new ReporteVentasPanel());
+            dialog.setContentPane(new ReporteVentasPanel());
             dialog.setSize(1100, 600); // puedes ajustar tamaño según diseño
             dialog.setLocationRelativeTo(null);
             dialog.setVisible(true);
@@ -155,26 +160,34 @@ public class ventaAdmin extends JFrame {
 
         add(panelNorte, BorderLayout.NORTH);
 
-        // --------------------- PANEL CENTRO ----------------------
-
-        // Definir columnas
-        String[] columnas = { "Clave", "Nombre", "Descripción", "Unidad", "Precio", "Stock", "Proveedor"};
-
+         // --------------------- PANEL CENTRO ----------------------
+        String[] columnas = {"Clave", "Nombre", "Descripción", "Unidad", "Precio", "Stock", "Proveedor"};
         LogicaAdmin.ProductosTableModel modelo = new LogicaAdmin.ProductosTableModel(columnas, 0);
         tablaProductos = new JTable(modelo);
-        this.modeloTabla = modelo; // para usarlo en cargarClientes()
+        this.modeloTabla = modelo;
 
-        tablaProductos = new JTable(modeloTabla);
         tablaProductos.setRowHeight(24);
         tablaProductos.setBackground(Color.decode("#FFFFFF"));
+
+        // Cargar proveedores en JComboBox
+        ValidacionesBD dao = new ValidacionesBD();
+        List<Proveedor> listaProveedores = dao.cargarProveedores();
+        JComboBox<Proveedor> comboProveedores = new JComboBox<>();
+        for (Proveedor p : listaProveedores) {
+            comboProveedores.addItem(p);
+        }
+        // Asignar el JComboBox como editor en la columna “Proveedor”
+        TableColumn colProveedor = tablaProductos.getColumnModel().getColumn(6);
+        colProveedor.setCellEditor(new DefaultCellEditor(comboProveedores));
 
         tablaProductos.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
                 .put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "confirmarEdicion");
         tablaProductos.getActionMap().put("confirmarEdicion", new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
-                //logic.confirmarODescartarEdicionProd(tablaProductos);
+                logic.confirmarODescartarEdicionProd(tablaProductos);
             }
         });
+
 
         // Encabezado
         JTableHeader header = tablaProductos.getTableHeader();
@@ -202,15 +215,15 @@ public class ventaAdmin extends JFrame {
 
         // ---------------------- PANEL SUR ------------------------
         JPanel panelSur = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        panelSur.setBackground(Color.decode("#B5EFE3"));
+        panelSur.setBackground(Color.decode("#7CBBBB"));
         panelSur.setBorder(new EmptyBorder(10, 10, 10, 10));
 
         btnModificar = new JButton("Modificar Producto");
         btnEliminar = new JButton("Eliminar Producto");
 
-       // btnModificar.addActionListener(e -> logic.iniciarEdicionProducto(tablaProductos));
+       btnModificar.addActionListener(e -> logic.iniciarEdicionProducto(tablaProductos));
 
-      //  btnEliminar.addActionListener(e -> logic.eliminarProductoSeleccionado(tablaProductos));
+       btnEliminar.addActionListener(e -> logic.eliminarProductoSeleccionado(tablaProductos));
         Dimension tamBoton = new Dimension(100, 30);
         for (JButton b : new JButton[] { btnModificar, btnEliminar }) {
             b.setPreferredSize(tamBoton);

@@ -101,7 +101,27 @@ public class InicioSesion extends JFrame {
 
         add(panelCampos);
 
-     // Acción del botón Aceptar
+        // Al presionar Enter en el campo usuario → pasa al campo contraseña
+        txtUsuario.getInputMap(JComponent.WHEN_FOCUSED)
+                .put(KeyStroke.getKeyStroke("ENTER"), "moverASiguienteCampo");
+        txtUsuario.getActionMap().put("moverASiguienteCampo", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                txtContrasena.requestFocus();
+            }
+        });
+
+        // Al presionar Enter en el campo contraseña → ejecutar inicio de sesión
+        txtContrasena.getInputMap(JComponent.WHEN_FOCUSED)
+                .put(KeyStroke.getKeyStroke("ENTER"), "iniciarSesion");
+        txtContrasena.getActionMap().put("iniciarSesion", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                btnAceptar.doClick(); // Simula clic en "Aceptar"
+            }
+        });
+
+        // Acción del botón Aceptar
         btnAceptar.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -135,8 +155,6 @@ public class InicioSesion extends JFrame {
                 });
             }
         });
-
-
 
         // Acción del botón Cancelar
         btnCancelar.addActionListener(e -> System.exit(0));

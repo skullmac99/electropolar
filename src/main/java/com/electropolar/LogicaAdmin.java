@@ -1,11 +1,22 @@
 package com.electropolar;
 
+import java.awt.Container;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
+import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 
+import Datos.ConexionBD;
 import Datos.ValidacionesBD;
+import presentacion.AdministarUsuario;
+import presentacion.AdministrarCliente;
+import presentacion.ventaAdmin;
 
 public class LogicaAdmin {
 
@@ -40,7 +51,7 @@ public class LogicaAdmin {
     public void procesarGuardarProducto(JTextField txtId,
             JTextField txtNombre,
             JTextField txtDescripcion,
-            JTextField txtUnidad,
+            JComboBox comboBox,
             JTextField txtPrecio,
             JTextField txtStock,
             JComboBox<Proveedor> comboproveedor) {
@@ -49,7 +60,7 @@ public class LogicaAdmin {
             String id = txtId.getText().trim();
             String nombre = txtNombre.getText().trim();
             String descripcion = txtDescripcion.getText().trim();
-            String unidad = txtUnidad.getText().trim();
+             String unidad = comboBox.getSelectedItem() != null ? comboBox.getSelectedItem().toString().trim() : "";
             String precioStr = txtPrecio.getText().trim();
             String stockStr = txtStock.getText().trim();
 
@@ -107,7 +118,7 @@ public class LogicaAdmin {
                 JOptionPane.showMessageDialog(null,
                         "Producto registrado con éxito.",
                         "Éxito", JOptionPane.INFORMATION_MESSAGE);
-                limpiarCampos(txtId, txtNombre, txtDescripcion, txtUnidad, txtPrecio, txtStock);
+                limpiarCampos(txtId, txtNombre, txtDescripcion, txtPrecio, txtStock);
             }
 
         } catch (NumberFormatException ex) {
@@ -117,6 +128,187 @@ public class LogicaAdmin {
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null,
                     "Error inesperado: " + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    public void iniciarEdicionProducto(JTable tabla) {
+        int row = tabla.getSelectedRow();
+        if (row < 0) {
+            JOptionPane.showMessageDialog(null,
+                    "Selecciona un Producto para modificar.",
+                    "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        ProductosTableModel modelo = (ProductosTableModel) tabla.getModel();
+        modelo.setEditableRow(row);
+        // Abrir edición en la primera columna editable (columna 1)
+        tabla.editCellAt(row, 0);
+        tabla.requestFocus();
+    }
+
+    public void eliminarProductoSeleccionado(JTable tabla) {
+        int fila = tabla.getSelectedRow();
+        if (fila == -1) {
+            JOptionPane.showMessageDialog(null, "Selecciona un producto para eliminar.", "Aviso",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        String clave = tabla.getValueAt(fila, 0).toString();
+
+        int confirm = JOptionPane.showConfirmDialog(null,
+                "¿Estás seguro de que deseas eliminar el producto con clave: " + clave + "?",
+                "Confirmar eliminación", JOptionPane.YES_NO_OPTION);
+
+        if (confirm != JOptionPane.YES_OPTION)
+            return;
+
+        try (Connection conn = ConexionBD.conectar();
+                PreparedStatement ps = conn.prepareStatement("DELETE FROM PRODUCTOS WHERE ID_PRODUCTOS = ?")) {
+
+            ps.setString(1, clave);
+            int rowsAffected = ps.executeUpdate();
+
+            if (rowsAffected > 0) {
+                ((DefaultTableModel) tabla.getModel()).removeRow(fila);
+                JOptionPane.showMessageDialog(null, "Producto eliminado correctamente.", "Éxito",
+                        JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(null, "No se encontró el producto o no se pudo eliminar.", "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Error al eliminar el producto: " + ex.getMessage(), "Error",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    public void confirmarODescartarEdicionProd(JTable tabla) {
+        ProductosTableModel modelo = (ProductosTableModel) tabla.getModel();
+        int row = modelo.getEditableRow();
+        if (row < 0)
+            return; // no estamos en modo edición
+
+        // Si hay un editor activo, ciérralo
+        if (tabla.isEditing()) {
+            tabla.getCellEditor().stopCellEditing();
+        }
+
+        int opt = JOptionPane.showConfirmDialog(null,
+                "¿Guardar cambios?", "Confirmar", JOptionPane.YES_NO_OPTION);
+
+        if (opt == JOptionPane.YES_OPTION) {
+            try {
+                Producto p = new Producto();
+                p.setId(modelo.getValueAt(row, 0).toString());
+                p.setNombre(modelo.getValueAt(row, 1).toString());
+                p.setDescripcion(modelo.getValueAt(row, 2).toString());
+                p.setUnidad(modelo.getValueAt(row, 3).toString());
+
+                // Validación y conversión segura del precio
+                String precioStr = modelo.getValueAt(row, 4).toString()
+                        .replace("$", "")
+                        .replace(",", "")
+                        .trim();
+                p.setPrecio(Double.parseDouble(precioStr));
+
+                // Validación de stock
+                p.setStock(Integer.parseInt(modelo.getValueAt(row, 5).toString()));
+
+                // ----- Manejo de la columna de Proveedor -----
+                Object proveedorObj = modelo.getValueAt(row, 6);
+                if (proveedorObj instanceof Proveedor) {
+                    Proveedor proveedor = (Proveedor) proveedorObj;
+                    p.setIdproveedor(proveedor.getIdProveedor());
+                } else {
+                    try {
+                        // Si viene como "ID - Nombre"
+                        String[] partes = proveedorObj.toString().split(" ");
+                        p.setIdproveedor(Integer.parseInt(partes[0]));
+                    } catch (Exception ex) {
+                        p.setIdproveedor(0);
+                    }
+                }
+
+                // ----- Guardar cambios en BD -----
+                if (bd.actualizarProducto(p)) {
+                    JOptionPane.showMessageDialog(null,
+                            "Producto actualizado correctamente.",
+                            "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(null,
+                            "Error al guardar los cambios.",
+                            "Error", JOptionPane.ERROR_MESSAGE);
+                }
+
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(null,
+                        "Ocurrió un error al procesar la actualización: " + ex.getMessage(),
+                        "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+
+        // Salimos del modo edición y recargamos la tabla
+        modelo.clearEditableRow();
+        SwingUtilities.invokeLater(() -> {
+            Container anc = SwingUtilities.getAncestorOfClass(ventaAdmin.class, tabla);
+            if (anc instanceof ventaAdmin) {
+                ((ventaAdmin) anc).cargarProductos();
+            }
+        });
+    }
+
+    public void procesarGuardarUsuario(JTextField txtNombre,
+            JTextField txtApellidoPat,
+            JTextField txtApellidoMat,
+            JComboBox comboBox) {
+        try {
+            String nombre = txtNombre.getText().trim();
+            String apPat = txtApellidoPat.getText().trim();
+            String apMat = txtApellidoMat.getText().trim();
+            String rol = comboBox.getSelectedItem() != null ? comboBox.getSelectedItem().toString().trim() : "";
+
+            // Validar campos vacíos
+            if (nombre.isEmpty() || apPat.isEmpty() || apMat.isEmpty() || rol.isEmpty()) {
+                JOptionPane.showMessageDialog(null,
+                        "Por favor completa todos los campos del usuario.",
+                        "Advertencia", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            // Validar solo letras en nombre y apellidos
+            if (!nombre.matches("[a-zA-ZÁÉÍÓÚáéíóúÑñ\\s]+") ||
+                    !apPat.matches("[a-zA-ZÁÉÍÓÚáéíóúÑñ\\s]+") ||
+                    !apMat.matches("[a-zA-ZÁÉÍÓÚáéíóúÑñ\\s]+")) {
+                JOptionPane.showMessageDialog(null,
+                        "El nombre y los apellidos solo deben contener letras.",
+                        "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Crear objeto usuario
+            Usuarios nuevo = new Usuarios(0, nombre, apPat, apMat, rol);
+
+            // Intentar guardar en la base de datos
+            if (bd.insertarUsuario(nuevo)) {
+                JOptionPane.showMessageDialog(null,
+                        "Usuario registrado con éxito.",
+                        "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                limpiarCampos(txtNombre, txtApellidoPat, txtApellidoMat);
+            } else {
+                JOptionPane.showMessageDialog(null,
+                        "No se pudo registrar el usuario.",
+                        "Error", JOptionPane.ERROR_MESSAGE);
+            }
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(null,
+                    "Ocurrió un error al guardar el usuario: " + ex.getMessage(),
                     "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
@@ -189,10 +381,252 @@ public class LogicaAdmin {
         }
     }
 
+    public void iniciarEdicionCliente(JTable tabla) {
+        int row = tabla.getSelectedRow();
+        if (row < 0) {
+            JOptionPane.showMessageDialog(null,
+                    "Selecciona un cliente para modificar.",
+                    "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        ClienteTableModel modelo = (ClienteTableModel) tabla.getModel();
+        modelo.setEditableRow(row);
+        // Abrir edición en la primera columna editable (columna 1)
+        tabla.editCellAt(row, 1);
+        tabla.requestFocus();
+    }
+
+    /**
+     * Detiene la edición, pide confirmación y guarda o descarta los cambios.
+     * Debes haber instalado esta acción sobre la tecla ENTER en tu JTable.
+     */
+    public void confirmarODescartarEdicion(JTable tabla) {
+        ClienteTableModel modelo = (ClienteTableModel) tabla.getModel();
+        int row = modelo.getEditableRow();
+        if (row < 0)
+            return; // no estamos en modo edición
+
+        // si hay un editor abierto, ciérralo
+        if (tabla.isEditing()) {
+            tabla.getCellEditor().stopCellEditing();
+        }
+
+        int opt = JOptionPane.showConfirmDialog(null,
+                "¿Guardar cambios?", "Confirmar", JOptionPane.YES_NO_OPTION);
+        if (opt == JOptionPane.YES_OPTION) {
+            // reconstruir objeto Cliente desde la fila
+            Cliente c = new Cliente();
+            c.setIdCliente(Integer.parseInt(modelo.getValueAt(row, 0).toString()));
+            c.setNombreCliente(modelo.getValueAt(row, 1).toString());
+            c.setRfc(modelo.getValueAt(row, 2).toString());
+            c.setCorreo(modelo.getValueAt(row, 3).toString());
+            c.setTelefono(modelo.getValueAt(row, 4).toString());
+            c.setCalle(modelo.getValueAt(row, 5).toString());
+            c.setColonia(modelo.getValueAt(row, 6).toString());
+            c.setNoExt(Integer.parseInt(modelo.getValueAt(row, 7).toString()));
+            c.setNoInt(Integer.parseInt(modelo.getValueAt(row, 8).toString()));
+            c.setCp(Integer.parseInt(modelo.getValueAt(row, 9).toString()));
+            c.setMunicipio(modelo.getValueAt(row, 10).toString());
+            c.setEstado(modelo.getValueAt(row, 11).toString());
+            c.setPais(modelo.getValueAt(row, 12).toString());
+            c.setCfdi(modelo.getValueAt(row, 13).toString());
+
+            if (bd.actualizarCliente(c)) {
+                JOptionPane.showMessageDialog(null,
+                        "Cliente actualizado correctamente.",
+                        "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(null,
+                        "Error al guardar los cambios.",
+                        "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+
+        // salimos del modo edición (tanto si guardamos como si no)
+        modelo.clearEditableRow();
+        // recarga la tabla para descartar edición en caso de NO
+        // Busca la instancia de AdministrarCliente en la jerarquía de contenedores
+        SwingUtilities.invokeLater(() -> {
+            Container anc = SwingUtilities.getAncestorOfClass(AdministrarCliente.class, tabla);
+            if (anc instanceof AdministrarCliente) {
+                ((AdministrarCliente) anc).cargarClientes();
+            }
+        });
+
+    }
+
+    public void eliminarClienteDesdeTabla(JTable tablaClientes) {
+        int fila = tablaClientes.getSelectedRow();
+        if (fila == -1) {
+            JOptionPane.showMessageDialog(null, "Selecciona un cliente para eliminar.", "Aviso",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Ahora usamos el ID real desde la columna 0
+        int idCliente = Integer.parseInt(tablaClientes.getValueAt(fila, 0).toString());
+        String nombre = tablaClientes.getValueAt(fila, 1).toString(); // solo para mostrar
+
+        int confirm = JOptionPane.showConfirmDialog(null,
+                "¿Estás seguro de eliminar al cliente \"" + nombre + "\"?",
+                "Confirmar eliminación", JOptionPane.YES_NO_OPTION);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            ValidacionesBD dao = new ValidacionesBD();
+            if (dao.eliminarClientePorId(idCliente)) {
+                JOptionPane.showMessageDialog(null, "Cliente eliminado con éxito.");
+                ((DefaultTableModel) tablaClientes.getModel()).removeRow(fila);
+            } else {
+                JOptionPane.showMessageDialog(null, "Error al eliminar el cliente.", "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    public void iniciarEdicionUsurio(JTable tabla) {
+        int row = tabla.getSelectedRow();
+        if (row < 0) {
+            JOptionPane.showMessageDialog(null,
+                    "Selecciona un Usuario para modificar.",
+                    "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        UsuarioTableModel modelo = (UsuarioTableModel) tabla.getModel();
+        modelo.setEditableRow(row);
+        // Abrir edición en la primera columna editable (columna 1)
+        tabla.editCellAt(row, 1);
+        tabla.requestFocus();
+    }
+
+    public void confirmarODescartarEdicionUs(JTable tabla) {
+        UsuarioTableModel modelo = (UsuarioTableModel) tabla.getModel();
+        int row = modelo.getEditableRow();
+        if (row < 0)
+            return; // no estamos en modo edición
+
+        // si hay un editor abierto, ciérralo
+        if (tabla.isEditing()) {
+            tabla.getCellEditor().stopCellEditing();
+        }
+
+        int opt = JOptionPane.showConfirmDialog(null,
+                "¿Guardar cambios?", "Confirmar", JOptionPane.YES_NO_OPTION);
+        if (opt == JOptionPane.YES_OPTION) {
+            // reconstruir objeto Cliente desde la fila
+            Usuarios u = new Usuarios();
+            u.setIdUsuario(Integer.parseInt(modelo.getValueAt(row, 0).toString()));
+            u.setNombre(modelo.getValueAt(row, 1).toString());
+            u.setApellidoPat(modelo.getValueAt(row, 2).toString());
+            u.setApellidoMat(modelo.getValueAt(row, 3).toString());
+            u.setRolUsuario(modelo.getValueAt(row, 4).toString());
+
+            if (bd.actualizarUsuario(u)) {
+                JOptionPane.showMessageDialog(null,
+                        "Usuario actualizado correctamente.",
+                        "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(null,
+                        "Error al guardar los cambios.",
+                        "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+
+        // salimos del modo edición (tanto si guardamos como si no)
+        modelo.clearEditableRow();
+        // recarga la tabla para descartar edición en caso de NO
+        // Busca la instancia de AdministrarCliente en la jerarquía de contenedores
+        SwingUtilities.invokeLater(() -> {
+            Container anc = SwingUtilities.getAncestorOfClass(AdministarUsuario.class, tabla);
+            if (anc instanceof AdministarUsuario) {
+                ((AdministarUsuario) anc).cargarUsuarios();
+            }
+        });
+
+    }
+
+    // ELIMINAR USUARIOS
+    public void eliminarUsuarioDesdeTabla(JTable tablaUsuarios) {
+        int fila = tablaUsuarios.getSelectedRow();
+        if (fila == -1) {
+            JOptionPane.showMessageDialog(null, "Selecciona un usuario para eliminar.", "Aviso",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Ahora usamos el ID real desde la columna 0
+        int idUsuario = Integer.parseInt(tablaUsuarios.getValueAt(fila, 0).toString());
+        String nombre = tablaUsuarios.getValueAt(fila, 1).toString(); // solo para mostrar
+
+        int confirm = JOptionPane.showConfirmDialog(null,
+                "¿Estás seguro de eliminar al usuario \"" + nombre + "\"?",
+                "Confirmar eliminación", JOptionPane.YES_NO_OPTION);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            ValidacionesBD dao = new ValidacionesBD();
+            if (dao.eliminarUsuarioPorId(idUsuario)) {
+                JOptionPane.showMessageDialog(null, "Usuario eliminado con éxito.");
+                ((DefaultTableModel) tablaUsuarios.getModel()).removeRow(fila);
+            } else {
+                JOptionPane.showMessageDialog(null, "Error al eliminar el usuario.", "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
     public static class ProductosTableModel extends DefaultTableModel {
         private int editableRow = -1;
 
         public ProductosTableModel(Object[] columns, int rows) {
+            super(columns, rows);
+        }
+
+        @Override
+        public boolean isCellEditable(int row, int col) {
+            return row == editableRow && col > 0;
+        }
+
+        public void setEditableRow(int row) {
+            this.editableRow = row;
+        }
+
+        public int getEditableRow() {
+            return editableRow;
+        }
+
+        public void clearEditableRow() {
+            this.editableRow = -1;
+        }
+    }
+
+    public static class ClienteTableModel extends DefaultTableModel {
+        private int editableRow = -1;
+
+        public ClienteTableModel(Object[] columns, int rows) {
+            super(columns, rows);
+        }
+
+        @Override
+        public boolean isCellEditable(int row, int col) {
+            return row == editableRow && col > 0;
+        }
+
+        public void setEditableRow(int row) {
+            this.editableRow = row;
+        }
+
+        public int getEditableRow() {
+            return editableRow;
+        }
+
+        public void clearEditableRow() {
+            this.editableRow = -1;
+        }
+    }
+
+    public static class UsuarioTableModel extends DefaultTableModel {
+        private int editableRow = -1;
+
+        public UsuarioTableModel(Object[] columns, int rows) {
             super(columns, rows);
         }
 

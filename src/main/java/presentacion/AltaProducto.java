@@ -15,7 +15,7 @@ import java.awt.event.KeyEvent;
 public class AltaProducto extends JPanel {
 
     private JTextField txtIdProducto, txtNombre, txtDescripcion, txtPrecio, txtStock, txtUnidad;
-    private JComboBox comboProveedor;
+    private JComboBox comboProveedor, comboUnidad;
     private JButton btnGuardar, btnCancelar;
     private final LogicaAdmin logic = new LogicaAdmin();
 
@@ -46,7 +46,10 @@ public class AltaProducto extends JPanel {
         txtDescripcion = new JTextField(20);
         txtPrecio = new JTextField(10);
         txtStock = new JTextField(5);
-        txtUnidad = new JTextField(5);
+         String[]roles={"pz","cj"};
+        comboUnidad = new JComboBox<>(roles);
+        comboUnidad.setFont(new Font("Arial", Font.PLAIN,14));
+        comboUnidad.setBackground(Color.decode("#A4C5E1"));
         comboProveedor = new JComboBox<>();
         ValidacionesBD vbd = new ValidacionesBD();
         for (Proveedor proveedor : vbd.cargarProveedores()) {
@@ -56,8 +59,7 @@ public class AltaProducto extends JPanel {
         // Estilos comunes
         Font fontCampos = new Font("SansSerif", Font.PLAIN, 14);
         Color campoFondo = Color.decode("#A4C5E1");
-        for (JTextField tf : new JTextField[] { txtIdProducto, txtNombre, txtDescripcion, txtPrecio, txtStock,
-                txtUnidad }) {
+        for (JTextField tf : new JTextField[] { txtIdProducto, txtNombre, txtDescripcion, txtPrecio, txtStock }) {
             tf.setFont(fontCampos);
             tf.setBackground(campoFondo);
             tf.setBorder(new LineBorder(Color.GRAY));
@@ -116,7 +118,7 @@ public class AltaProducto extends JPanel {
         gbc.gridy = 5;
         panelCentral.add(new JLabel("Unidad"), gbc);
         gbc.gridx = 1;
-        panelCentral.add(txtUnidad, gbc);
+        panelCentral.add(comboUnidad, gbc);
 
         // Proveedor
         gbc.gridx = 0;
@@ -129,13 +131,13 @@ public class AltaProducto extends JPanel {
 
         // ------------------- Panel botones -------------------
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        panelBotones.setBackground(Color.decode("#FEFEFE"));
+        panelBotones.setBackground(Color.decode("#7CBBBB"));
 
         btnGuardar = new JButton("Guardar");
         btnGuardar.setBackground(Color.decode("#A4C5E1"));
         btnGuardar.addActionListener(e -> logic.procesarGuardarProducto(
                 txtIdProducto, txtNombre, txtDescripcion,
-                txtUnidad, txtPrecio, txtStock, comboProveedor));
+                comboUnidad, txtPrecio, txtStock, comboProveedor));
 
         btnCancelar = new JButton("Cancelar");
         btnCancelar.setBackground(Color.decode("#A4C5E1"));
