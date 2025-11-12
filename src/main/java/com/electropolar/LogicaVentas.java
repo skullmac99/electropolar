@@ -10,7 +10,7 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import Datos.ValidacionesBD;
 import com.electropolar.Producto; // <-- Importante
-import com.electropolar.Cliente; 
+import com.electropolar.Cliente;
 import com.electropolar.Vendedor;
 // (Asegúrate de importar tus clases Venta, DetalleVenta, TicketPDFGenerator)
 
@@ -22,12 +22,12 @@ public class LogicaVentas {
     private final List<DetalleVenta> detallesEnMemoria = new ArrayList<>();
 
     // [CAMBIO]: Variable declarada para guardar el producto
-    private Producto productoSeleccionado; 
+    private Producto productoSeleccionado;
 
     public LogicaVentas(JFrame parent, JTextField txtClave, JTextField txtNombre, JTextField txtDescripcion,
             JTextField txtExistencia, JTextField txtUnidad, JTextField txtCantidad,
             JTextField txtDcto, JTextField txtPrecioUnit, JTextField txtTotalPagar, JTable tablaVenta) {
-        
+
         this.parentFrame = parent; // Tu asignación original (perfecto)
         this.txtClave = txtClave;
         this.txtNombre = txtNombre;
@@ -50,22 +50,22 @@ public class LogicaVentas {
         Producto productoEncontrado = new ValidacionesBD().buscarProductoPorClave(clave);
 
         if (productoEncontrado != null) {
-            
+
             // --- ¡AQUÍ ESTÁ LA LÓGICA FALTANTE! ---
-            
+
             // 1. Obtenemos el COSTO de la BD
             double costo = productoEncontrado.getCostoPromedio();
-            
+
             // 2. CALCULAMOS el precio de venta (ej. con 50% de ganancia)
-            //    ¡¡AJUSTA ESTE NÚMERO (1.50) A TU MARGEN DE GANANCIA!!
-            double precioDeVenta = costo * 1.50; 
-            
+            // ¡¡AJUSTA ESTE NÚMERO (1.50) A TU MARGEN DE GANANCIA!!
+            double precioDeVenta = costo * 1.50;
+
             // 3. Guardamos el precio de venta en el objeto
             productoEncontrado.setPrecioVenta(precioDeVenta);
 
             // 4. Guardamos el producto completo para usarlo después
-            this.productoSeleccionado = productoEncontrado; 
-            
+            this.productoSeleccionado = productoEncontrado;
+
             // 5. Llama a cargarDatos (que ahora SÍ tiene un precio de venta)
             cargarDatosProducto(productoEncontrado);
             txtCantidad.requestFocus();
@@ -78,18 +78,19 @@ public class LogicaVentas {
         }
     }
 
-    /** * [MODIFICADO]
+    /**
+     * * [MODIFICADO]
      * Procesa la cantidad y usa el 'productoSeleccionado' que ya tenemos.
      */
     public void procesarCantidad() {
         try {
             // Validar que haya un producto seleccionado
             if (this.productoSeleccionado == null || !this.productoSeleccionado.getId().equals(txtClave.getText())) {
-                 JOptionPane.showMessageDialog(parentFrame, "Error: Producto no válido. Vuelva a buscarlo.",
+                JOptionPane.showMessageDialog(parentFrame, "Error: Producto no válido. Vuelva a buscarlo.",
                         "Error", JOptionPane.ERROR_MESSAGE);
-                 return;
+                return;
             }
-            
+
             int cantidad = Integer.parseInt(txtCantidad.getText());
             double precioUnitario = Double.parseDouble(txtPrecioUnit.getText());
             double descuento = Double.parseDouble(txtDcto.getText());
@@ -109,7 +110,7 @@ public class LogicaVentas {
             // Lógica de mayoreo (del código original)
             // [NOTA]: Esto aplicará el 20% de descuento sobre el PRECIO DE VENTA
             if (cantidad >= 10) {
-                precioUnitario *= 0.8; 
+                precioUnitario *= 0.8;
             }
 
             double totalProducto = (precioUnitario * cantidad) * (1 - descuento / 100.0);
@@ -120,7 +121,7 @@ public class LogicaVentas {
             actualizarTotalVenta();
             limpiarCamposProducto();
             txtClave.requestFocus();
-            
+
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(parentFrame, "Error en los datos. Verifica la cantidad o el descuento.",
                     "Error", JOptionPane.ERROR_MESSAGE);
@@ -138,7 +139,8 @@ public class LogicaVentas {
         txtTotalPagar.setText(String.format("%.2f", total));
     }
 
-    /** * [MODIFICADO]
+    /**
+     * * [MODIFICADO]
      * Limpia los campos de producto y el producto guardado.
      */
     public void limpiarCamposProducto() {
@@ -154,7 +156,8 @@ public class LogicaVentas {
         this.productoSeleccionado = null; // <-- Limpia el producto guardado
     }
 
-    /** * [MODIFICADO]
+    /**
+     * * [MODIFICADO]
      * Carga los datos de un producto a los campos.
      * Ahora usa 'getPrecioVenta()', que ya fue calculado.
      */
@@ -167,15 +170,17 @@ public class LogicaVentas {
         txtCantidad.setText("1");
         txtDcto.setText("0");
         // [CORRECTO]: Esto ahora mostrará el precio de venta calculado
-        txtPrecioUnit.setText(String.format("%.2f", producto.getPrecioVenta())); 
+        txtPrecioUnit.setText(String.format("%.2f", producto.getPrecioVenta()));
     }
 
-    /** * [MODIFICADO]
+    /**
+     * * [MODIFICADO]
      * Agrega el producto a la tabla usando el objeto 'Producto',
      * en lugar de reconstruir uno que da error.
      */
-    private void agregarProductoATabla(Producto producto, int cantidad, double precioUnitario, double descuento, double totalProducto) {
-        
+    private void agregarProductoATabla(Producto producto, int cantidad, double precioUnitario, double descuento,
+            double totalProducto) {
+
         // 1) Crear el DetalleVenta
         double subtotal = (precioUnitario * cantidad) * (1 - descuento / 100.0);
         DetalleVenta detalle = new DetalleVenta(
@@ -225,7 +230,7 @@ public class LogicaVentas {
             int idUsuario = vendedor.getId();
             int idCliente = cliente.getIdCliente();
 
-            ValidacionesBD  dao = new ValidacionesBD();
+            ValidacionesBD dao = new ValidacionesBD();
             int idVentaGen = dao.finalizarVenta(totalVenta, idUsuario, idCliente, detallesEnMemoria);
             if (idVentaGen <= 0)
                 throw new RuntimeException("Error al insertar venta.");
@@ -237,7 +242,26 @@ public class LogicaVentas {
             JOptionPane.showMessageDialog(parentFrame, "Venta exitosa. Ticket: " + ruta, "Éxito",
                     JOptionPane.INFORMATION_MESSAGE);
 
-            // ... (Resto de tu lógica para limpiar y actualizar folio)
+            // Limpiar tabla y campos
+            ((DefaultTableModel) tablaVenta.getModel()).setRowCount(0);
+            detallesEnMemoria.clear();
+            txtTotalPagar.setText("0.00");
+
+            // Actualizar folio después de cada venta
+            try {
+                int siguienteFolio = dao.obtenerNextFolio();
+                // Busca si en la ventana existe un campo txtFolio
+                Component[] componentes = parentFrame.getContentPane().getComponents();
+                for (Component comp : componentes) {
+                    if (comp instanceof JTextField && ((JTextField) comp).getName() != null
+                            && ((JTextField) comp).getName().equals("txtFolio")) {
+                        ((JTextField) comp).setText(String.valueOf(siguienteFolio));
+                        break;
+                    }
+                }
+            } catch (Exception ex) {
+                System.err.println("No se pudo actualizar el folio: " + ex.getMessage());
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -267,13 +291,13 @@ public class LogicaVentas {
                     // --- [MODIFICACIÓN] ---
                     // No construimos un producto desde la tabla, lo buscamos en la BD
                     Producto productoEncontrado = new ValidacionesBD().buscarProductoPorClave(clave);
-                    
+
                     if (productoEncontrado != null) {
                         // Aplicamos la misma lógica de cálculo de precio
                         double costo = productoEncontrado.getCostoPromedio();
                         double precioDeVenta = costo * 1.50; // ¡AJUSTA TU GANANCIA!
                         productoEncontrado.setPrecioVenta(precioDeVenta);
-                        
+
                         // Guardamos y cargamos
                         LogicaVentas.this.productoSeleccionado = productoEncontrado;
                         cargarDatosProducto(productoEncontrado);
@@ -282,7 +306,7 @@ public class LogicaVentas {
                         SwingUtilities.getWindowAncestor(tablaBuscarProducto).dispose();
                         txtCantidad.requestFocus();
                     } else {
-                         JOptionPane.showMessageDialog(parentFrame, "Error, producto no encontrado en la BD.");
+                        JOptionPane.showMessageDialog(parentFrame, "Error, producto no encontrado en la BD.");
                     }
                 }
             }
