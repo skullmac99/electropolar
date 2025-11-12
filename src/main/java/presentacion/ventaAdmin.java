@@ -256,7 +256,7 @@ public class ventaAdmin extends JFrame {
                 p.getNombre(),
                 p.getDescripcion(),
                 p.getUnidad(),
-                String.format("$%.2f", p.getPrecio()),
+                String.format("$%.2f", p.getCostoPromedio()),
                 p.getStock(),
                 proveedorTexto
         });

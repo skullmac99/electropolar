@@ -139,7 +139,8 @@ public class ValidacionesBD {
 
     /** Busca un producto por su clave (ID_PRODUCTOS). */
     public Producto buscarProductoPorClave(String clave) {
-        String sql = "SELECT * FROM PRODUCTOS WHERE ID_PRODUCTOS = ?";
+        String sql = "SELECT ID_PRODUCTOS,NOMBRE,DESCRIPCION, UNIDAD,"+
+        "PRECIO,STOCK,ID_PROVEEDOR FROM PRODUCTOS WHERE ID_PRODUCTOS = ?";
         try (Connection conn = ConexionBD.conectar();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, clave);
@@ -151,7 +152,8 @@ public class ValidacionesBD {
                             rs.getString("DESCRIPCION"),
                             rs.getString("UNIDAD"),
                             rs.getDouble("PRECIO"),
-                            rs.getInt("STOCK"));
+                            rs.getInt("STOCK"),
+                            rs.getInt("ID_PROVEEDOR"));
                 }
             }
         } catch (Exception e) {
@@ -560,7 +562,7 @@ public class ValidacionesBD {
             stmt.setString(2, producto.getNombre());
             stmt.setString(3, producto.getDescripcion());
             stmt.setString(4, producto.getUnidad());
-            stmt.setDouble(5, producto.getPrecio());
+            stmt.setDouble(5, producto.getCostoPromedio());
             stmt.setInt(6, producto.getStock());
             stmt.setInt(7, producto.getIdproveedor());
 
@@ -699,12 +701,13 @@ public class ValidacionesBD {
         ps.setString(1, p.getNombre());
         ps.setString(2, p.getDescripcion());
         ps.setString(3, p.getUnidad());
-        ps.setDouble(4, p.getPrecio());
+        ps.setDouble(4, p.getCostoPromedio());
         ps.setInt(5, p.getStock());
         ps.setInt(6, p.getIdproveedor());
         ps.setString(7, p.getId());
 
-        return ps.executeUpdate() > 0;
+        int filasAfectadas=ps.executeUpdate();
+        return filasAfectadas>0;
 
     } catch (SQLException e) {
         e.printStackTrace();

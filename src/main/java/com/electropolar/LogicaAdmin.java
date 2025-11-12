@@ -4,6 +4,7 @@ import java.awt.Container;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.text.DecimalFormat;
 
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
@@ -97,11 +98,11 @@ public class LogicaAdmin {
                 return;
             }
 
-            double precio = Double.parseDouble(precioStr);
-            int stock = Integer.parseInt(stockStr);
-
+            double costoDeCompra= Double.parseDouble(precioStr);
+            int stockDeCompra = Integer.parseInt(stockStr);
             // Validar proveedor seleccionado
             Proveedor proveedorSeleccionado = (Proveedor) comboproveedor.getSelectedItem();
+
             if (proveedorSeleccionado == null) {
                 JOptionPane.showMessageDialog(null,
                         "Debe seleccionar un proveedor válido.",
@@ -112,13 +113,63 @@ public class LogicaAdmin {
             int idproveedor = proveedorSeleccionado.getIdProveedor();
 
             // Crear producto y guardar
-            Producto nuevo = new Producto(id, nombre, descripcion, unidad, precio, stock, idproveedor);
+            //Producto nuevo = new Producto(id, nombre, descripcion, unidad, precio, stock, idproveedor);
+            Producto productoExistente=bd.buscarProductoPorClave(id);
 
-            if (guardarProducto(nuevo)) {
-                JOptionPane.showMessageDialog(null,
-                        "Producto registrado con éxito.",
-                        "Éxito", JOptionPane.INFORMATION_MESSAGE);
-                limpiarCampos(txtId, txtNombre, txtDescripcion, txtPrecio, txtStock);
+  if (productoExistente == null) {
+                // --- [CASO 1: Producto NUEVO] ---
+                double costoPromedioInicial = costoDeCompra;
+                
+                // Usamos el constructor de 7 argumentos
+                Producto nuevo = new Producto(id, nombre, descripcion, unidad,
+                        costoPromedioInicial, stockDeCompra, idproveedor);
+
+                // Llamamos a tu método guardarProducto (que ya valida si existe)
+                if (guardarProducto(nuevo)) { 
+                    JOptionPane.showMessageDialog(null, "Producto NUEVO registrado con éxito.");
+                    limpiarCampos(txtId, txtNombre, txtDescripcion, txtPrecio, txtStock);
+                    // Deberías limpiar el JComboBox también
+                    // comboBox.setSelectedIndex(0); 
+                }
+
+            } else {
+                // --- [CASO 2: Producto EXISTENTE (Calcular Promedio)] ---
+
+                // [CORRECCIÓN]: Usamos getCostoPromedio()
+                double costoPromedioActual = productoExistente.getCostoPromedio();
+                int stockActual = productoExistente.getStock();
+
+                double valorInventarioActual = stockActual * costoPromedioActual;
+                double valorNuevaCompra = stockDeCompra * costoDeCompra;
+
+                int stockTotal = stockActual + stockDeCompra;
+                double valorTotal = valorInventarioActual + valorNuevaCompra;
+
+                double nuevoCostoPromedio = (stockTotal > 0) ? (valorTotal / stockTotal) : 0.0;
+
+                // Actualizamos el objeto existente
+                productoExistente.setNombre(nombre);
+                productoExistente.setDescripcion(descripcion);
+                productoExistente.setUnidad(unidad); // Actualizamos la unidad
+                productoExistente.setIdproveedor(idproveedor);
+                productoExistente.setStock(stockTotal);
+                
+                // [CORRECCIÓN]: Usamos setCostoPromedio()
+                productoExistente.setCostoPromedio(nuevoCostoPromedio); 
+
+                // Llama al método de ACTUALIZAR
+                if (bd.actualizarProducto(productoExistente)) {
+                    DecimalFormat df = new DecimalFormat("#.00");
+                    JOptionPane.showMessageDialog(null,
+                            "Stock de producto actualizado con éxito.\n" +
+                            "Nuevo costo promedio: " + df.format(nuevoCostoPromedio),
+                            "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                    limpiarCampos(txtId, txtNombre, txtDescripcion, txtPrecio, txtStock);
+                } else {
+                    JOptionPane.showMessageDialog(null,
+                            "Error al ACTUALIZAR el producto.",
+                            "Error", JOptionPane.ERROR_MESSAGE);
+                }
             }
 
         } catch (NumberFormatException ex) {
@@ -213,7 +264,7 @@ public class LogicaAdmin {
                         .replace("$", "")
                         .replace(",", "")
                         .trim();
-                p.setPrecio(Double.parseDouble(precioStr));
+                p.setCostoPromedio(Double.parseDouble(precioStr));
 
                 // Validación de stock
                 p.setStock(Integer.parseInt(modelo.getValueAt(row, 5).toString()));
