@@ -17,6 +17,7 @@ import Datos.ConexionBD;
 import Datos.ValidacionesBD;
 import presentacion.AdministarUsuario;
 import presentacion.AdministrarCliente;
+import presentacion.AdministrarProveedor;
 import presentacion.ventaAdmin;
 
 public class LogicaAdmin {
@@ -535,6 +536,77 @@ public class LogicaAdmin {
         }
     }
 
+    public void iniciarEdicionProveedor(JTable tabla) {
+        int row = tabla.getSelectedRow();
+        if (row < 0) {
+            JOptionPane.showMessageDialog(null,
+                    "Selecciona un proveedor para modificar.",
+                    "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        ProveedoresTableModel modelo = (ProveedoresTableModel) tabla.getModel();
+        modelo.setEditableRow(row);
+        // Abrir edición en la primera columna editable (columna 1)
+        tabla.editCellAt(row, 1);
+        tabla.requestFocus();
+    }
+
+     public void confirmarODescartarEdicionProveedores(JTable tabla) {
+        ProveedoresTableModel modelo = (ProveedoresTableModel) tabla.getModel();
+        int row = modelo.getEditableRow();
+        if (row < 0)
+            return; // no estamos en modo edición
+
+        // si hay un editor abierto, ciérralo
+        if (tabla.isEditing()) {
+            tabla.getCellEditor().stopCellEditing();
+        }
+
+        int opt = JOptionPane.showConfirmDialog(null,
+                "¿Guardar cambios?", "Confirmar", JOptionPane.YES_NO_OPTION);
+        if (opt == JOptionPane.YES_OPTION) {
+            // reconstruir objeto Cliente desde la fila
+            Proveedor p = new Proveedor();
+            p.setIdProveedor(Integer.parseInt(modelo.getValueAt(row, 0).toString()));
+            p.setNombre(modelo.getValueAt(row, 1).toString());
+            p.setRfc(modelo.getValueAt(row, 2).toString());
+            p.setCorreo(modelo.getValueAt(row, 3).toString());
+            p.setTelefono(modelo.getValueAt(row, 4).toString());
+            p.setEstado(modelo.getValueAt(row, 5).toString());
+            p.setCiudad(modelo.getValueAt(row, 6).toString());
+            p.setCalle(modelo.getValueAt(row, 7).toString());
+            p.setColonia(modelo.getValueAt(row, 8).toString());
+            p.setNumeroExte(Integer.parseInt(modelo.getValueAt(row, 9).toString()));
+            p.setNumeroInt(Integer.parseInt(modelo.getValueAt(row, 10).toString()));
+            p.setCodigoPost(Integer.parseInt(modelo.getValueAt(row, 11).toString()));
+            p.setMunicipio(modelo.getValueAt(row, 12).toString());
+            p.setPais(modelo.getValueAt(row, 13).toString());
+            p.setEstatus(modelo.getValueAt(row, 14).toString());
+
+            if (bd.actualizarProveedor(p)) {
+                JOptionPane.showMessageDialog(null,
+                        "Proveedor actualizado correctamente.",
+                        "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(null,
+                        "Error al guardar los cambios.",
+                        "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+
+        // salimos del modo edición (tanto si guardamos como si no)
+        modelo.clearEditableRow();
+        // recarga la tabla para descartar edición en caso de NO
+        // Busca la instancia de AdministrarCliente en la jerarquía de contenedores
+        SwingUtilities.invokeLater(() -> {
+            Container anc = SwingUtilities.getAncestorOfClass(AdministrarProveedor.class, tabla);
+            if (anc instanceof AdministrarProveedor) {
+                ((AdministrarProveedor) anc).cargarProveedores();
+            }
+        });
+
+    }
+
     public void procesarGuardarProveedor(
             JTextField txtNombre, JTextField txtRfc, JTextField txtCorreo, JTextField txtTelefono,
             JTextField txtEstado, JTextField txtCiudad, JTextField txtCalle, JTextField txtColonia,
@@ -770,5 +842,31 @@ public class LogicaAdmin {
             this.editableRow = -1;
         }
     }
+
+    public static class ProveedoresTableModel extends DefaultTableModel {
+        private int editableRow = -1;
+
+        public ProveedoresTableModel(Object[] columns, int rows) {
+            super(columns, rows);
+        }
+
+        @Override
+        public boolean isCellEditable(int row, int col) {
+            return row == editableRow && col > 0;
+        }
+
+        public void setEditableRow(int row) {
+            this.editableRow = row;
+        }
+
+        public int getEditableRow() {
+            return editableRow;
+        }
+
+        public void clearEditableRow() {
+            this.editableRow = -1;
+        }
+    }
+
 
 }

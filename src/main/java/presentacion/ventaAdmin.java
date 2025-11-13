@@ -31,7 +31,7 @@ public class ventaAdmin extends JFrame {
         super("Sistema de Punto de Venta");
 
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setSize(1400, 700);
+        setSize(1500, 700);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
@@ -82,6 +82,12 @@ public class ventaAdmin extends JFrame {
         btnAltaProveedor.setBackground(Color.decode("#A4C5E1"));
         btnAltaProveedor.setBorder(new LineBorder(Color.BLACK, 1, true));
         panelNorte.add(btnAltaProveedor);
+
+        JButton btnAdminProveedor = new JButton("Administrar Proveedor");
+        btnAdminProveedor.setPreferredSize(new Dimension(130, 40));
+        btnAdminProveedor.setBackground(Color.decode("#A4C5E1"));
+        btnAdminProveedor.setBorder(new LineBorder(Color.BLACK, 1, true));
+        panelNorte.add(btnAdminProveedor);
 
         JButton btnReportes = new JButton("Reportes de ventas");
         btnReportes.setPreferredSize(new Dimension(130, 40));
@@ -144,6 +150,15 @@ public class ventaAdmin extends JFrame {
             dialog.setVisible(true);
         });
 
+        // Acción para abrir el panel AdministarCliente
+        btnAdminProveedor.addActionListener(e -> {
+            JDialog dialog = new JDialog(this, "Administrar Proveedor", true);
+            dialog.setContentPane(new AdministrarProveedor());
+            dialog.setSize(1200, 500);
+            dialog.setLocationRelativeTo(null);
+            dialog.setVisible(true);
+        });
+
         // Acción para abrir el panel ReporteVentasPanel
         btnReportes.addActionListener(e -> {
             JDialog dialog = new JDialog(this, "Reporte de Ventas", true);
@@ -175,8 +190,8 @@ public class ventaAdmin extends JFrame {
 
         add(panelNorte, BorderLayout.NORTH);
 
-         // --------------------- PANEL CENTRO ----------------------
-        String[] columnas = {"Clave", "Nombre", "Descripción", "Unidad", "Precio", "Stock", "Proveedor"};
+        // --------------------- PANEL CENTRO ----------------------
+        String[] columnas = { "Clave", "Nombre", "Descripción", "Unidad", "Precio", "Stock", "Proveedor" };
         LogicaAdmin.ProductosTableModel modelo = new LogicaAdmin.ProductosTableModel(columnas, 0);
         tablaProductos = new JTable(modelo);
         this.modeloTabla = modelo;
@@ -202,7 +217,6 @@ public class ventaAdmin extends JFrame {
                 logic.confirmarODescartarEdicionProd(tablaProductos);
             }
         });
-
 
         // Encabezado
         JTableHeader header = tablaProductos.getTableHeader();
@@ -236,9 +250,9 @@ public class ventaAdmin extends JFrame {
         btnModificar = new JButton("Modificar Producto");
         btnEliminar = new JButton("Eliminar Producto");
 
-       btnModificar.addActionListener(e -> logic.iniciarEdicionProducto(tablaProductos));
+        btnModificar.addActionListener(e -> logic.iniciarEdicionProducto(tablaProductos));
 
-       btnEliminar.addActionListener(e -> logic.eliminarProductoSeleccionado(tablaProductos));
+        btnEliminar.addActionListener(e -> logic.eliminarProductoSeleccionado(tablaProductos));
         Dimension tamBoton = new Dimension(100, 30);
         for (JButton b : new JButton[] { btnModificar, btnEliminar }) {
             b.setPreferredSize(tamBoton);
@@ -256,27 +270,26 @@ public class ventaAdmin extends JFrame {
      * Carga productos desde la BD y los coloca en la tabla.
      */
     public void cargarProductos() {
-    modeloTabla.setRowCount(0); // limpiar tabla
-    ValidacionesBD dao = new ValidacionesBD();
+        modeloTabla.setRowCount(0); // limpiar tabla
+        ValidacionesBD dao = new ValidacionesBD();
 
-    for (Producto p : dao.obtenerTodosProductos()) {
-        //  Obtener el nombre del proveedor 
-        String nombreProveedor = dao.obtenerNombreProveedorPorId(p.getIdproveedor());
+        for (Producto p : dao.obtenerTodosProductos()) {
+            // Obtener el nombre del proveedor
+            String nombreProveedor = dao.obtenerNombreProveedorPorId(p.getIdproveedor());
 
-        //  Crear la columna de proveedor como "ID - Nombre"
-        String proveedorTexto = p.getIdproveedor() + " - " + nombreProveedor;
+            // Crear la columna de proveedor como "ID - Nombre"
+            String proveedorTexto = p.getIdproveedor() + " - " + nombreProveedor;
 
-        modeloTabla.addRow(new Object[] {
-                p.getId(),
-                p.getNombre(),
-                p.getDescripcion(),
-                p.getUnidad(),
-                String.format("$%.2f", p.getCostoPromedio()),
-                p.getStock(),
-                proveedorTexto
-        });
+            modeloTabla.addRow(new Object[] {
+                    p.getId(),
+                    p.getNombre(),
+                    p.getDescripcion(),
+                    p.getUnidad(),
+                    String.format("$%.2f", p.getCostoPromedio()),
+                    p.getStock(),
+                    proveedorTexto
+            });
+        }
     }
-}
-
 
 }

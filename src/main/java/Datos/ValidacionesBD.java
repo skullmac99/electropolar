@@ -101,6 +101,21 @@ public class ValidacionesBD {
         return lista;
     }
 
+    public List<Proveedor> cargarEstatusProveedor() {
+        List<Proveedor> lista = new ArrayList<>();
+        String sql = "SELECT DISTINCT ESTATUS FROM PROVEEDORES";
+        try (Connection conn = ConexionBD.conectar();
+                PreparedStatement stmt = conn.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                lista.add(new Proveedor(rs.getString("ESTATUS")));
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, "Error al cargar proveedor: " + e.getMessage());
+        }
+        return lista;
+    }
+
     /** Búsqueda dinámica para el panel BuscarProducto. */
     public List<Object[]> buscarProductos(String texto) {
         List<Object[]> productos = new ArrayList<>();
@@ -628,36 +643,35 @@ public class ValidacionesBD {
     }
 
     public boolean insertarProveedor(Proveedor proveedor) {
-    String sql = "INSERT INTO PROVEEDORES (NOMBRE, RFC, CORREO, TELEFONO, ESTADO, CIUDAD, CALLE, COLONIA, "
-               + "NUMERO_EXTE, NUMERO_INT, CODIGO_POST, MUNICIPIO, PAIS, ESTATUS) "
-               + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO PROVEEDORES (NOMBRE, RFC, CORREO, TELEFONO, ESTADO, CIUDAD, CALLE, COLONIA, "
+                + "NUMERO_EXTE, NUMERO_INT, CODIGO_POST, MUNICIPIO, PAIS, ESTATUS) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-    try (Connection conn = ConexionBD.conectar();
-         PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = ConexionBD.conectar();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-        stmt.setString(1, proveedor.getNombre());
-        stmt.setString(2, proveedor.getRfc());
-        stmt.setString(3, proveedor.getCorreo());
-        stmt.setString(4, proveedor.getTelefono());
-        stmt.setString(5, proveedor.getEstado());
-        stmt.setString(6, proveedor.getCiudad());
-        stmt.setString(7, proveedor.getCalle());
-        stmt.setString(8, proveedor.getColonia());
-        stmt.setInt(9, proveedor.getNumeroExte());
-        stmt.setInt(10, proveedor.getNumeroInt());
-        stmt.setInt(11, proveedor.getCodigoPost());
-        stmt.setString(12, proveedor.getMunicipio());
-        stmt.setString(13, proveedor.getPais());
-        stmt.setString(14, proveedor.getEstatus());
+            stmt.setString(1, proveedor.getNombre());
+            stmt.setString(2, proveedor.getRfc());
+            stmt.setString(3, proveedor.getCorreo());
+            stmt.setString(4, proveedor.getTelefono());
+            stmt.setString(5, proveedor.getEstado());
+            stmt.setString(6, proveedor.getCiudad());
+            stmt.setString(7, proveedor.getCalle());
+            stmt.setString(8, proveedor.getColonia());
+            stmt.setInt(9, proveedor.getNumeroExte());
+            stmt.setInt(10, proveedor.getNumeroInt());
+            stmt.setInt(11, proveedor.getCodigoPost());
+            stmt.setString(12, proveedor.getMunicipio());
+            stmt.setString(13, proveedor.getPais());
+            stmt.setString(14, proveedor.getEstatus());
 
-        return stmt.executeUpdate() > 0;
+            return stmt.executeUpdate() > 0;
 
-    } catch (SQLException e) {
-        e.printStackTrace();
-        return false;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
-}
-
 
     /**
      * Recupera todos los productos de la base de datos.
@@ -712,6 +726,43 @@ public class ValidacionesBD {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        return lista;
+    }
+
+    public List<Proveedor> obtenerTodosProveedores() {
+        List<Proveedor> lista = new ArrayList<>();
+        String sql = "SELECT ID_PROVEEDOR, NOMBRE, RFC, CORREO, TELEFONO, ESTADO, CIUDAD, CALLE, COLONIA, "
+                + "NUMERO_EXTE, NUMERO_INT, CODIGO_POST, MUNICIPIO, PAIS, ESTATUS "
+                + "FROM PROVEEDORES";
+
+        try (Connection conn = ConexionBD.conectar();
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                Proveedor p = new Proveedor(
+                        rs.getInt("ID_PROVEEDOR"),
+                        rs.getString("NOMBRE"),
+                        rs.getString("RFC"),
+                        rs.getString("CORREO"),
+                        rs.getString("TELEFONO"),
+                        rs.getString("ESTADO"),
+                        rs.getString("CIUDAD"),
+                        rs.getString("CALLE"),
+                        rs.getString("COLONIA"),
+                        rs.getInt("NUMERO_EXTE"),
+                        rs.getInt("NUMERO_INT"),
+                        rs.getInt("CODIGO_POST"),
+                        rs.getString("MUNICIPIO"),
+                        rs.getString("PAIS"),
+                        rs.getString("ESTATUS"));
+                lista.add(p);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
         return lista;
     }
 
@@ -817,6 +868,53 @@ public class ValidacionesBD {
         }
     }
 
+    public boolean actualizarProveedor(Proveedor p) {
+        String sql = """
+                UPDATE PROVEEDORES SET
+                  NOMBRE    = ?,
+                  RFC       = ?,
+                  CORREO    = ?,
+                  TELEFONO  = ?,
+                  ESTADO    = ?,
+                  CIUDAD    = ?,
+                  CALLE     = ?,
+                  COLONIA   = ?,
+                  NUMERO_EXTE     = ?,
+                  NUMERO_INT     = ?,
+                  CODIGO_POST        = ?,
+                  MUNICIPIO = ?,
+                  PAIS      = ?,
+                  ESTATUS      = ?
+                WHERE ID_PROVEEDOR = ?
+                """;
+
+        try (Connection conn = ConexionBD.conectar();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+
+            ps.setString(1, p.getNombre());
+            ps.setString(2, p.getRfc());
+            ps.setString(3, p.getCorreo());
+            ps.setString(4, p.getTelefono());
+            ps.setString(5, p.getEstado());
+            ps.setString(6, p.getCiudad());
+            ps.setString(7, p.getCalle());
+            ps.setString(8, p.getColonia());
+            ps.setInt(9, p.getNumeroExte());
+            ps.setInt(10, p.getNumeroInt());
+            ps.setInt(11, p.getCodigoPost());
+            ps.setString(12, p.getMunicipio());
+            ps.setString(13, p.getPais());
+            ps.setString(14, p.getEstatus().trim().toUpperCase());
+            ps.setInt(15, p.getIdProveedor());
+
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public boolean eliminarUsuarioPorId(int idUsuario) {
         String sql = "DELETE FROM USUARIOS WHERE ID_USUARIO = ?";
         try (Connection conn = ConexionBD.conectar();
@@ -834,6 +932,18 @@ public class ValidacionesBD {
         try (Connection conn = ConexionBD.conectar();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setInt(1, idCliente);
+            return stmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean eliminarProveedorPorId(int idProveedor) {
+        String sql = "DELETE FROM PROVEEDORES WHERE ID_PROVEEDOR = ?";
+        try (Connection conn = ConexionBD.conectar();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, idProveedor);
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();

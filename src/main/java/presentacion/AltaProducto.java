@@ -15,7 +15,8 @@ import java.awt.event.KeyEvent;
 public class AltaProducto extends JPanel {
 
     private JTextField txtIdProducto, txtNombre, txtDescripcion, txtPrecio, txtStock, txtUnidad;
-    private JComboBox comboProveedor, comboUnidad;
+    private JComboBox<Proveedor> comboProveedor;
+    private JComboBox comboUnidad;
     private JButton btnGuardar, btnCancelar;
     private final LogicaAdmin logic = new LogicaAdmin();
 

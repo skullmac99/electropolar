@@ -23,9 +23,9 @@ public class Proveedor {
      * Se usa, por ejemplo, al recuperar los datos desde la base de datos.
      */
     public Proveedor(int idProveedor, String nombre, String rfc, String correo, String telefono,
-                     String estado, String ciudad, String calle, String colonia,
-                     int numeroExte, int numeroInt, int codigoPost,
-                     String municipio, String pais, String estatus) {
+            String estado, String ciudad, String calle, String colonia,
+            int numeroExte, int numeroInt, int codigoPost,
+            String municipio, String pais, String estatus) {
         this.idProveedor = idProveedor;
         this.nombre = nombre;
         this.rfc = rfc;
@@ -46,12 +46,13 @@ public class Proveedor {
     /**
      * Constructor sin ID ni estatus.
      * Ideal para cuando se va a registrar un nuevo proveedor (alta).
-     * El ID lo genera la base de datos automáticamente y el estatus por defecto es "ACTIVO".
+     * El ID lo genera la base de datos automáticamente y el estatus por defecto es
+     * "ACTIVO".
      */
     public Proveedor(String nombre, String rfc, String correo, String telefono,
-                     String estado, String ciudad, String calle, String colonia,
-                     int numeroExte, int numeroInt, int codigoPost,
-                     String municipio, String pais, String estatus) {
+            String estado, String ciudad, String calle, String colonia,
+            int numeroExte, int numeroInt, int codigoPost,
+            String municipio, String pais, String estatus) {
         this.nombre = nombre;
         this.rfc = rfc;
         this.correo = correo;
@@ -70,11 +71,20 @@ public class Proveedor {
 
     /**
      * Constructor simple con ID y nombre.
-     * Útil para mostrar en combos o listados donde solo se requiere identificar al proveedor.
+     * Útil para mostrar en combos o listados donde solo se requiere identificar al
+     * proveedor.
      */
     public Proveedor(int idProveedor, String nombre) {
         this.idProveedor = idProveedor;
         this.nombre = nombre;
+    }
+
+    /**
+     * Constructor simple con estatus
+     * Útil para mostrar en combos o listados donde solo se requiere el estatus
+     */
+    public Proveedor(String estatus) {
+        this.estatus = estatus;
     }
 
     /**
@@ -92,7 +102,7 @@ public class Proveedor {
 
     // ---------------- Getters y Setters ----------------
 
-
+    
     public int getIdProveedor() {
         return idProveedor;
     }
@@ -213,7 +223,4 @@ public class Proveedor {
         this.estatus = estatus;
     }
 
-    // ---------------- Getters y Setters ----------------
-
-   
 }
