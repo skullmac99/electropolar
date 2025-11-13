@@ -31,7 +31,7 @@ public class ventaAdmin extends JFrame {
         super("Sistema de Punto de Venta");
 
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setSize(1200, 700);
+        setSize(1400, 700);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
@@ -76,6 +76,12 @@ public class ventaAdmin extends JFrame {
         btnAdminCliente.setBackground(Color.decode("#A4C5E1"));
         btnAdminCliente.setBorder(new LineBorder(Color.BLACK, 1, true));
         panelNorte.add(btnAdminCliente);
+
+        JButton btnAltaProveedor = new JButton("Alta Proveedor");
+        btnAltaProveedor.setPreferredSize(new Dimension(130, 40));
+        btnAltaProveedor.setBackground(Color.decode("#A4C5E1"));
+        btnAltaProveedor.setBorder(new LineBorder(Color.BLACK, 1, true));
+        panelNorte.add(btnAltaProveedor);
 
         JButton btnReportes = new JButton("Reportes de ventas");
         btnReportes.setPreferredSize(new Dimension(130, 40));
@@ -127,6 +133,15 @@ public class ventaAdmin extends JFrame {
             dialog.setLocationRelativeTo(null);
             dialog.setVisible(true);
             cargarProductos();
+        });
+
+        // Acción para abrir el panel AltaCliente
+        btnAltaProveedor.addActionListener(e -> {
+            JDialog dialog = new JDialog(this, "Alta de Proveedor", true);
+            dialog.setContentPane(new AltaProveedor());
+            dialog.setSize(900, 500);
+            dialog.setLocationRelativeTo(null);
+            dialog.setVisible(true);
         });
 
         // Acción para abrir el panel ReporteVentasPanel

@@ -139,8 +139,8 @@ public class ValidacionesBD {
 
     /** Busca un producto por su clave (ID_PRODUCTOS). */
     public Producto buscarProductoPorClave(String clave) {
-        String sql = "SELECT ID_PRODUCTOS,NOMBRE,DESCRIPCION, UNIDAD,"+
-        "PRECIO,STOCK,ID_PROVEEDOR FROM PRODUCTOS WHERE ID_PRODUCTOS = ?";
+        String sql = "SELECT ID_PRODUCTOS,NOMBRE,DESCRIPCION, UNIDAD," +
+                "PRECIO,STOCK,ID_PROVEEDOR FROM PRODUCTOS WHERE ID_PRODUCTOS = ?";
         try (Connection conn = ConexionBD.conectar();
                 PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, clave);
@@ -627,6 +627,38 @@ public class ValidacionesBD {
         }
     }
 
+    public boolean insertarProveedor(Proveedor proveedor) {
+    String sql = "INSERT INTO PROVEEDORES (NOMBRE, RFC, CORREO, TELEFONO, ESTADO, CIUDAD, CALLE, COLONIA, "
+               + "NUMERO_EXTE, NUMERO_INT, CODIGO_POST, MUNICIPIO, PAIS, ESTATUS) "
+               + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+    try (Connection conn = ConexionBD.conectar();
+         PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+        stmt.setString(1, proveedor.getNombre());
+        stmt.setString(2, proveedor.getRfc());
+        stmt.setString(3, proveedor.getCorreo());
+        stmt.setString(4, proveedor.getTelefono());
+        stmt.setString(5, proveedor.getEstado());
+        stmt.setString(6, proveedor.getCiudad());
+        stmt.setString(7, proveedor.getCalle());
+        stmt.setString(8, proveedor.getColonia());
+        stmt.setInt(9, proveedor.getNumeroExte());
+        stmt.setInt(10, proveedor.getNumeroInt());
+        stmt.setInt(11, proveedor.getCodigoPost());
+        stmt.setString(12, proveedor.getMunicipio());
+        stmt.setString(13, proveedor.getPais());
+        stmt.setString(14, proveedor.getEstatus());
+
+        return stmt.executeUpdate() > 0;
+
+    } catch (SQLException e) {
+        e.printStackTrace();
+        return false;
+    }
+}
+
+
     /**
      * Recupera todos los productos de la base de datos.
      */
@@ -684,37 +716,36 @@ public class ValidacionesBD {
     }
 
     public boolean actualizarProducto(Producto p) {
-    String sql = """
-            UPDATE PRODUCTOS SET
-              NOMBRE       = ?,
-              DESCRIPCION  = ?,
-              UNIDAD       = ?,
-              PRECIO       = ?,
-              STOCK        = ?,
-              ID_PROVEEDOR = ?
-            WHERE ID_PRODUCTOS = ?
-            """;
+        String sql = """
+                UPDATE PRODUCTOS SET
+                  NOMBRE       = ?,
+                  DESCRIPCION  = ?,
+                  UNIDAD       = ?,
+                  PRECIO       = ?,
+                  STOCK        = ?,
+                  ID_PROVEEDOR = ?
+                WHERE ID_PRODUCTOS = ?
+                """;
 
-    try (Connection conn = ConexionBD.conectar();
-         PreparedStatement ps = conn.prepareStatement(sql)) {
+        try (Connection conn = ConexionBD.conectar();
+                PreparedStatement ps = conn.prepareStatement(sql)) {
 
-        ps.setString(1, p.getNombre());
-        ps.setString(2, p.getDescripcion());
-        ps.setString(3, p.getUnidad());
-        ps.setDouble(4, p.getCostoPromedio());
-        ps.setInt(5, p.getStock());
-        ps.setInt(6, p.getIdproveedor());
-        ps.setString(7, p.getId());
+            ps.setString(1, p.getNombre());
+            ps.setString(2, p.getDescripcion());
+            ps.setString(3, p.getUnidad());
+            ps.setDouble(4, p.getCostoPromedio());
+            ps.setInt(5, p.getStock());
+            ps.setInt(6, p.getIdproveedor());
+            ps.setString(7, p.getId());
 
-        int filasAfectadas=ps.executeUpdate();
-        return filasAfectadas>0;
+            int filasAfectadas = ps.executeUpdate();
+            return filasAfectadas > 0;
 
-    } catch (SQLException e) {
-        e.printStackTrace();
-        return false;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
-}
-
 
     public boolean actualizarCliente(Cliente c) {
         String sql = """

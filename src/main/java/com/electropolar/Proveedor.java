@@ -51,7 +51,7 @@ public class Proveedor {
     public Proveedor(String nombre, String rfc, String correo, String telefono,
                      String estado, String ciudad, String calle, String colonia,
                      int numeroExte, int numeroInt, int codigoPost,
-                     String municipio, String pais) {
+                     String municipio, String pais, String estatus) {
         this.nombre = nombre;
         this.rfc = rfc;
         this.correo = correo;
@@ -65,7 +65,7 @@ public class Proveedor {
         this.codigoPost = codigoPost;
         this.municipio = municipio;
         this.pais = pais;
-        this.estatus = "ACTIVO"; // valor por defecto
+        this.estatus = estatus;
     }
 
     /**
@@ -89,7 +89,9 @@ public class Proveedor {
         return idProveedor + " - " + nombre;
     }
 
+
     // ---------------- Getters y Setters ----------------
+
 
     public int getIdProveedor() {
         return idProveedor;
@@ -210,4 +212,8 @@ public class Proveedor {
     public void setEstatus(String estatus) {
         this.estatus = estatus;
     }
+
+    // ---------------- Getters y Setters ----------------
+
+   
 }

@@ -61,7 +61,7 @@ public class LogicaAdmin {
             String id = txtId.getText().trim();
             String nombre = txtNombre.getText().trim();
             String descripcion = txtDescripcion.getText().trim();
-             String unidad = comboBox.getSelectedItem() != null ? comboBox.getSelectedItem().toString().trim() : "";
+            String unidad = comboBox.getSelectedItem() != null ? comboBox.getSelectedItem().toString().trim() : "";
             String precioStr = txtPrecio.getText().trim();
             String stockStr = txtStock.getText().trim();
 
@@ -98,7 +98,7 @@ public class LogicaAdmin {
                 return;
             }
 
-            double costoDeCompra= Double.parseDouble(precioStr);
+            double costoDeCompra = Double.parseDouble(precioStr);
             int stockDeCompra = Integer.parseInt(stockStr);
             // Validar proveedor seleccionado
             Proveedor proveedorSeleccionado = (Proveedor) comboproveedor.getSelectedItem();
@@ -113,23 +113,24 @@ public class LogicaAdmin {
             int idproveedor = proveedorSeleccionado.getIdProveedor();
 
             // Crear producto y guardar
-            //Producto nuevo = new Producto(id, nombre, descripcion, unidad, precio, stock, idproveedor);
-            Producto productoExistente=bd.buscarProductoPorClave(id);
+            // Producto nuevo = new Producto(id, nombre, descripcion, unidad, precio, stock,
+            // idproveedor);
+            Producto productoExistente = bd.buscarProductoPorClave(id);
 
-  if (productoExistente == null) {
+            if (productoExistente == null) {
                 // --- [CASO 1: Producto NUEVO] ---
                 double costoPromedioInicial = costoDeCompra;
-                
+
                 // Usamos el constructor de 7 argumentos
                 Producto nuevo = new Producto(id, nombre, descripcion, unidad,
                         costoPromedioInicial, stockDeCompra, idproveedor);
 
                 // Llamamos a tu método guardarProducto (que ya valida si existe)
-                if (guardarProducto(nuevo)) { 
+                if (guardarProducto(nuevo)) {
                     JOptionPane.showMessageDialog(null, "Producto NUEVO registrado con éxito.");
                     limpiarCampos(txtId, txtNombre, txtDescripcion, txtPrecio, txtStock);
                     // Deberías limpiar el JComboBox también
-                    // comboBox.setSelectedIndex(0); 
+                    // comboBox.setSelectedIndex(0);
                 }
 
             } else {
@@ -153,16 +154,16 @@ public class LogicaAdmin {
                 productoExistente.setUnidad(unidad); // Actualizamos la unidad
                 productoExistente.setIdproveedor(idproveedor);
                 productoExistente.setStock(stockTotal);
-                
+
                 // [CORRECCIÓN]: Usamos setCostoPromedio()
-                productoExistente.setCostoPromedio(nuevoCostoPromedio); 
+                productoExistente.setCostoPromedio(nuevoCostoPromedio);
 
                 // Llama al método de ACTUALIZAR
                 if (bd.actualizarProducto(productoExistente)) {
                     DecimalFormat df = new DecimalFormat("#.00");
                     JOptionPane.showMessageDialog(null,
                             "Stock de producto actualizado con éxito.\n" +
-                            "Nuevo costo promedio: " + df.format(nuevoCostoPromedio),
+                                    "Nuevo costo promedio: " + df.format(nuevoCostoPromedio),
                             "Éxito", JOptionPane.INFORMATION_MESSAGE);
                     limpiarCampos(txtId, txtNombre, txtDescripcion, txtPrecio, txtStock);
                 } else {
@@ -531,6 +532,77 @@ public class LogicaAdmin {
                 JOptionPane.showMessageDialog(null, "Error al eliminar el cliente.", "Error",
                         JOptionPane.ERROR_MESSAGE);
             }
+        }
+    }
+
+    public void procesarGuardarProveedor(
+            JTextField txtNombre, JTextField txtRfc, JTextField txtCorreo, JTextField txtTelefono,
+            JTextField txtEstado, JTextField txtCiudad, JTextField txtCalle, JTextField txtColonia,
+            JTextField txtNoExt, JTextField txtNoInt, JTextField txtCp,
+            JTextField txtMunicipio, JTextField txtPais,
+            JComboBox comboProveedor) {
+
+        try {
+            String nombre = txtNombre.getText().trim();
+            String rfc = txtRfc.getText().trim();
+            String correo = txtCorreo.getText().trim();
+            String telefono = txtTelefono.getText().trim();
+            String estado = txtEstado.getText().trim();
+            String ciudad = txtCiudad.getText().trim();
+            String calle = txtCalle.getText().trim();
+            String colonia = txtColonia.getText().trim();
+            String noExtStr = txtNoExt.getText().trim();
+            String noIntStr = txtNoInt.getText().trim();
+            String cpStr = txtCp.getText().trim();
+            String municipio = txtMunicipio.getText().trim();
+            String pais = txtPais.getText().trim();
+            String estatus = comboProveedor.getSelectedItem() != null
+                    ? comboProveedor.getSelectedItem().toString().trim()
+                    : "";
+            // Debug
+            System.out.println("noExtStr = '" + noExtStr + "'");
+            System.out.println("noIntStr = '" + noIntStr + "'");
+            System.out.println("cpStr    = '" + cpStr + "'");
+
+            if (nombre.isEmpty() || rfc.isEmpty() || correo.isEmpty()) {
+                JOptionPane.showMessageDialog(null,
+                        "Por favor completa todos los campos obligatorios.",
+                        "Advertencia", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            // Validación numérica
+            if (!noExtStr.matches("\\d+") || !noIntStr.matches("\\d+") || !cpStr.matches("\\d+")) {
+                JOptionPane.showMessageDialog(null,
+                        "Los campos No. Ext, No. Int y Código Postal deben contener solo números enteros.",
+                        "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            int noExt = Integer.parseInt(noExtStr);
+            int noInt = Integer.parseInt(noIntStr);
+            int cp = Integer.parseInt(cpStr);
+
+            Proveedor nuevo = new Proveedor(nombre, rfc, correo, telefono, estado, ciudad, calle, colonia, noExt, noInt,
+                    cp, municipio, pais, estatus);
+
+            boolean exito = new ValidacionesBD().insertarProveedor(nuevo);
+
+            if (exito) {
+                JOptionPane.showMessageDialog(null, "Proveedor registrado con éxito.", "Éxito",
+                        JOptionPane.INFORMATION_MESSAGE);
+                limpiarCampos(txtNombre, txtRfc, txtCorreo, txtTelefono, txtCalle,
+                        txtColonia, txtNoExt, txtNoInt, txtCp, txtMunicipio,
+                        txtEstado, txtPais, txtCiudad);
+            } else {
+                JOptionPane.showMessageDialog(null, "Error al registrar el proveedor.", "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(null,
+                    "Número exterior, interior o código postal inválidos.",
+                    "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 

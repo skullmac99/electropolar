@@ -46,8 +46,8 @@ public class AltaProducto extends JPanel {
         txtDescripcion = new JTextField(20);
         txtPrecio = new JTextField(10);
         txtStock = new JTextField(5);
-         String[]roles={"pz","cj"};
-        comboUnidad = new JComboBox<>(roles);
+        String[]unidades={"pz","cj"};
+        comboUnidad = new JComboBox<>(unidades);
         comboUnidad.setFont(new Font("Arial", Font.PLAIN,14));
         comboUnidad.setBackground(Color.decode("#A4C5E1"));
         comboProveedor = new JComboBox<>();
